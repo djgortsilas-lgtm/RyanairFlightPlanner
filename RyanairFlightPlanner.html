@@ -1,0 +1,2561 @@
+﻿<!DOCTYPE html>
+<html lang="el">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RyanairFlightPlanner v.2 - Multi-Destination Ryanair από Ελλάδα</title>
+<style>
+:root {
+  --bg: #f4f6f9;
+  --surface: #ffffff;
+  --surface2: #f8f9fc;
+  --text: #1a1a2e;
+  --text2: #6b7280;
+  --border: #e5e7eb;
+  --accent: #4facfe;
+  --accent2: #f093fb;
+  --pink: #f5576c;
+  --green: #10b981;
+  --gold: #f59e0b;
+  --violet: #8b5cf6;
+  --orange: #fb923c;
+  --teal: #14b8a6;
+  --sunset: linear-gradient(135deg, #f093fb, #f5576c 45%, #ff9a44);
+  --rainbow: linear-gradient(90deg, #f093fb, #f5576c, #ff9a44, #facc15, #34d399, #4facfe, #8b5cf6);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
+  background-color: var(--bg);
+  background-image: linear-gradient(135deg, #fdf4ff 0%, #eff6ff 45%, #fff7ed 100%);
+  background-attachment: fixed;
+  color: var(--text); min-height: 100vh; padding: 24px;
+}
+::selection { background: #f0abfc; color: #4a044e; }
+.container { max-width: 1400px; margin: 0 auto; }
+header {
+  text-align: center; padding: 32px 24px;
+  background: var(--surface); border-radius: 20px; margin-bottom: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+header h1 {
+  font-size: 2.5rem; font-weight: 800;
+  background: linear-gradient(135deg, var(--accent2), var(--pink), var(--orange), var(--accent), var(--violet));
+  background-size: 200% auto;
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientMove 7s ease infinite;
+}
+@keyframes gradientMove { 0%, 100% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } }
+header p { color: var(--text2); font-size: 1.1rem; margin-top: 6px; }
+.city-selector { display: flex; gap: 6px; justify-content: center; margin-top: 12px; flex-wrap: wrap; }
+.city-btn {
+  padding: 6px 14px; border-radius: 20px; border: 2px solid var(--border);
+  background: var(--surface); color: var(--text2); font-size: 0.82rem; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+}
+.city-btn:hover { border-color: var(--accent); color: var(--accent); }
+.city-btn.active { background: linear-gradient(135deg, var(--accent), var(--violet)); color: #fff; border-color: transparent; }
+.city-sep { display:inline-block; width:2px; height:28px; background:#ccc; margin:4px 6px; vertical-align:middle; }
+header .badge {
+  display: inline-block; margin-top: 8px; padding: 4px 14px;
+  background: linear-gradient(90deg, #fdf4ff, #fff1f2, #eff6ff);
+  border: 1px solid #f0abfc;
+  border-radius: 20px; font-size: 0.85rem; color: #c026d3; font-weight: 700;
+}
+header { overflow: hidden; }
+header::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 6px;
+  background: var(--rainbow);
+}
+.filters {
+  background: var(--surface); border-radius: 20px; padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+  margin-bottom: 24px;
+}
+.filter-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 18px; }
+.filter-group { display: flex; flex-direction: column; gap: 6px; }
+.filter-group label { font-size: 0.8rem; font-weight: 700; color: var(--text2); text-transform: uppercase; letter-spacing: 0.4px; }
+.filter-group input, .filter-group select {
+  padding: 10px 14px; border-radius: 12px; border: 1.5px solid var(--border);
+  background: var(--surface2); color: var(--text); font-size: 0.95rem; outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.filter-group input:focus, .filter-group select:focus {
+  border-color: var(--accent); box-shadow: 0 0 0 3px rgba(79,172,254,0.15);
+}
+.filter-group input[type="number"] { width: 100%; }
+.filter-group .range-row { display: flex; gap: 10px; align-items: center; }
+.filter-group .range-row input { flex: 1; }
+.filter-group .range-row span { color: var(--text2); font-size: 0.9rem; }
+.filter-group.checkbox-group { flex-direction: row; align-items: center; gap: 10px; }
+.filter-group.checkbox-group input[type="checkbox"] {
+  width: 18px; height: 18px; accent-color: var(--accent); cursor: pointer;
+}
+.btn {
+  padding: 11px 28px; border: none; border-radius: 12px; font-size: 0.95rem;
+  font-weight: 700; cursor: pointer; transition: all 0.25s; text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+.btn-primary {
+  background: var(--sunset);
+  color: #fff; box-shadow: 0 4px 14px rgba(245,87,108,0.4);
+}
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(251,146,60,0.5); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-secondary {
+  background: var(--surface2); color: var(--accent); border: 1.5px solid var(--border);
+}
+.btn-secondary:hover { background: rgba(79,172,254,0.08); border-color: var(--accent); }
+.btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+.mc-label {
+  display: inline-block; padding: 1px 8px; border-radius: 6px;
+  background: linear-gradient(90deg, rgba(240,147,251,0.2), rgba(79,172,254,0.2));
+  color: #a21caf; font-size: 0.75rem; font-weight: 700;
+  vertical-align: middle;
+}
+.mc-section { margin-top: 8px; }
+.mc-card {
+  background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+  padding: 20px 24px; margin-bottom: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+}
+.mc-card .mc-card-title { font-weight: 700; font-size: 1rem; margin-bottom: 14px; color: var(--text); }
+.mc-card .mc-legs { display: flex; flex-direction: column; gap: 4px; align-items: center; }
+.mc-card .mc-leg {
+  display: flex; gap: 14px; align-items: center; padding: 8px 16px;
+  background: var(--surface2); border-radius: 10px; width: 100%; max-width: 480px;
+  justify-content: center; flex-wrap: wrap;
+}
+.mc-card .mc-leg.mc-mid { border: 1.5px dashed var(--accent); background: rgba(79,172,254,0.06); }
+.mc-card .mc-leg .mc-route { font-weight: 600; font-size: 0.9rem; color: var(--text); }
+.mc-card .mc-leg .mc-date { color: var(--text2); font-size: 0.8rem; }
+.mc-card .mc-leg .mc-price { font-weight: 700; color: var(--green); font-size: 0.95rem; }
+.mc-card .mc-arrow { color: var(--border); font-size: 0.85rem; line-height: 1; }
+.mc-card .mc-total { text-align: center; margin-top: 12px; font-size: 1.05rem; color: var(--text2); }
+.mc-card .mc-total strong { color: var(--pink); font-size: 1.2rem; }
+.mc-card .mc-compare { text-align: center; margin-top: 12px; font-size: 0.85rem; color: var(--text2); padding: 8px 14px; background: var(--surface2); border-radius: 10px; }
+.mc-card .mc-strikethrough { text-decoration: line-through; color: var(--pink); }
+.mc-card .mc-via-route { color: var(--green); font-weight: 600; }
+.mc-card .mc-saved { color: var(--accent); font-weight: 600; }
+.cal-section { margin-top: 20px; }
+.cal-section h3 { font-size: 1rem; margin-bottom: 12px; color: var(--text2); }
+.cal-scroll { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+.cal-table { border-collapse: collapse; font-size: 0.8rem; white-space: nowrap; width: 100%; }
+.cal-table th { background: var(--surface2); color: var(--text2); font-weight: 600; padding: 7px 10px; border: 1px solid var(--border); text-align: center; position: sticky; top: 0; z-index: 1; }
+.cal-table td { padding: 6px 10px; border: 1px solid var(--border); text-align: center; }
+.cal-table .cal-dest { font-weight: 700; color: var(--accent); text-align: left; position: sticky; left: 0; background: var(--surface); z-index: 2; }
+.cal-table .cal-date { font-size: 0.7rem; line-height: 1.4; text-align: center; }
+.cal-table .cal-date .day-name { display: block; font-size: 0.6rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; }
+.cal-table .cal-date-wknd { color: #d32f2f; }
+.cal-cell { font-weight: 700; line-height: 1.6; font-size: 0.9rem; }
+.cal-nights { display: block; font-size: 0.75rem; color: var(--accent); font-weight: 600; line-height: 1; }
+.cal-min { background: #fff3cd !important; }
+.cal-max { background: #f8d7da !important; }
+.cal-empty { color: var(--border); font-weight: 400; }
+.cache-info {
+  display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text2);
+  padding: 8px 0; margin-bottom: 4px;
+}
+.cache-info .dot {
+  width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex-shrink: 0;
+}
+.cache-info .dot.fresh { background: var(--green); }
+.cache-info .dot.stale { background: var(--gold); }
+.cache-info .dot.loading { background: var(--accent); animation: pulse 1s infinite; }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+.cache-info .dot.empty { background: var(--pink); }
+.search-row {
+  display: flex; gap: 12px; align-items: end; flex-wrap: wrap;
+  margin-top: 14px; padding-top: 18px; border-top: 1px solid var(--border);
+}
+.filters.collapsed .filter-grid,
+.filters.collapsed .destinations-section,
+.filters.collapsed #cacheInfo,
+.filters.collapsed #noteText { display: none; }
+.filters.collapsed .search-row { border-top: none; margin-top: 0; padding-top: 0; }
+.skel-wrap { max-width: 460px; margin: 18px auto 0; display: flex; flex-direction: column; gap: 10px; }
+.skel {
+  border-radius: 12px;
+  background: linear-gradient(90deg, var(--surface2) 25%, var(--border) 50%, var(--surface2) 75%);
+  background-size: 200% 100%; animation: shimmer 1.4s infinite;
+}
+.skel-line { height: 14px; }
+.skel-card { height: 74px; border: 1px solid var(--border); }
+@keyframes shimmer { to { background-position: -200% 0; } }
+.destinations-section { margin-top: 18px; }
+.destinations-header {
+  display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;
+  flex-wrap: wrap; gap: 8px;
+}
+.destinations-header .count { color: var(--text2); font-size: 0.85rem; }
+.destinations-actions { display: flex; gap: 8px; }
+.mc-tabs { display:flex; gap:4px; margin-bottom:10px; flex-wrap:wrap; }
+.mc-tab { padding:6px 14px; border-radius:8px; border:1.5px solid var(--border); background:var(--surface2); color:var(--text2); font-size:0.8rem; font-weight:600; cursor:pointer; transition:all 0.15s; }
+.mc-tab:hover { border-color:var(--accent); color:var(--text); }
+.mc-tab.active { background:var(--accent); color:#fff; border-color:var(--accent); }
+.destinations-grid {
+  display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 8px; max-height: 260px; overflow-y: auto; padding: 2px;
+}
+.destinations-grid::-webkit-scrollbar { width: 6px; }
+.destinations-grid::-webkit-scrollbar-track { background: transparent; }
+.destinations-grid::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+.dest-item {
+  display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+  border-radius: 10px; background: var(--surface2); cursor: pointer;
+  transition: background 0.2s, transform 0.15s; font-size: 0.9rem;
+}
+.dest-item:hover { background: rgba(79,172,254,0.08); }
+.dest-item input { accent-color: var(--accent); cursor: pointer; }
+.dest-item .dest-code { color: var(--accent); font-weight: 700; font-size: 0.8rem; min-width: 32px; }
+.dest-item .dest-name { color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.results {
+  background: var(--surface); border-radius: 20px; padding: 24px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+}
+.results-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 8px; }
+.results-header h2 { font-size: 1.4rem; color: var(--text); }
+.results-header .info { color: var(--text2); font-size: 0.9rem; }
+.results-controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.results-controls select { max-width: 100%; }
+.results-controls select {
+  padding: 6px 12px; border-radius: 8px; border: 1.5px solid var(--border);
+  background: var(--surface2); color: var(--text); font-size: 0.85rem;
+  outline: none; cursor: pointer;
+}
+.table-wrap { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left; padding: 12px 14px; font-size: 0.8rem; text-transform: uppercase;
+  letter-spacing: 0.4px; color: #7c3aed; border-bottom: 2px solid #e9d5ff;
+  white-space: nowrap; user-select: none; background: linear-gradient(180deg, #faf5ff, var(--surface2));
+}
+td { padding: 11px 14px; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(79,172,254,0.04); }
+.dest-cell { display: flex; align-items: center; gap: 8px; }
+.code-badge {
+  background: linear-gradient(90deg, rgba(139,92,246,0.16), rgba(79,172,254,0.16));
+  color: #7c3aed; padding: 2px 8px; border: 1px solid rgba(139,92,246,0.3);
+  border-radius: 6px; font-weight: 700; font-size: 0.8rem; white-space: nowrap;
+}
+.price { font-weight: 700; font-size: 1rem; color: var(--accent); }
+.price-total { font-weight: 800; font-size: 1.15rem; color: var(--pink); }
+.nights-badge {
+  display: inline-block; padding: 2px 10px; border-radius: 8px;
+  background: linear-gradient(90deg, #f5f3ff, #eff6ff);
+  font-size: 0.85rem; font-weight: 700; color: #6d28d9; border: 1px solid #c4b5fd;
+}
+.rank-badge {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 26px; height: 26px; border-radius: 50%; font-weight: 700; font-size: 0.75rem;
+}
+.rank-1 { background: linear-gradient(135deg, #fde68a, #f59e0b); color: #fff; }
+.rank-2 { background: linear-gradient(135deg, #c4b5fd, #818cf8); color: #fff; }
+.rank-3 { background: linear-gradient(135deg, #fdba74, #ea580c); color: #fff; }
+.rank-other { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+.loading { text-align: center; padding: 40px; color: var(--text2); }
+.loading .spinner {
+  position: relative; display: inline-block; width: 48px; height: 48px;
+  border-radius: 50%; background: linear-gradient(to right, #999 50%, #222 50%);
+  animation: spin-yin 2s linear infinite; margin-bottom: 12px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.1);
+}
+.loading .spinner::before, .loading .spinner::after {
+  content: ''; position: absolute; width: 24px; height: 24px;
+  border-radius: 50%; left: 50%; transform: translateX(-50%);
+}
+.loading .spinner::before {
+  top: 0; background: #222;
+  background: radial-gradient(circle, #999 5px, #222 5px);
+}
+.loading .spinner::after {
+  bottom: 0; background: #999;
+  background: radial-gradient(circle, #222 5px, #999 5px);
+}
+@keyframes spin-yin { to { transform: rotate(360deg); } }
+.loading .progress-text { font-size: 0.9rem; margin-top: 8px; }
+.loading .progress-bar {
+  width: 100%; max-width: 400px; height: 6px; background: var(--surface2);
+  border-radius: 3px; margin: 14px auto 0; overflow: hidden;
+}
+.loading .progress-bar-fill {
+  height: 100%; background: var(--rainbow); background-size: 200% 100%;
+  border-radius: 3px; transition: width 0.3s; animation: gradientMove 3s linear infinite;
+}
+.error-msg {
+  padding: 16px; border-radius: 12px; background: rgba(245,87,108,0.08);
+  border: 1px solid rgba(245,87,108,0.2); color: var(--pink); margin-bottom: 16px;
+}
+.empty-msg { text-align: center; padding: 40px; color: var(--text2); }
+.empty-msg .big-icon { font-size: 3rem; margin-bottom: 12px; }
+
+@media (max-width: 768px) {
+  body { padding: 12px; }
+  header { padding: 24px 16px; }
+  header h1 { font-size: 1.6rem; }
+  .filters, .results { padding: 16px; border-radius: 16px; }
+  .filter-grid { grid-template-columns: 1fr; }
+  .filter-group input, .filter-group select, #originSelect, .results-controls select { font-size: 16px; }
+  #originSelect { max-width: 100%; width: 100%; }
+  .city-selector { flex-direction: column; align-items: stretch; }
+  .destinations-grid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .destinations-actions { width: 100%; }
+  .destinations-actions .btn { flex: 1; padding: 11px 10px; }
+  #searchBtn { width: 100%; padding: 14px 20px; }
+  .search-row { position: sticky; bottom: 0; background: var(--surface); z-index: 5; padding-bottom: 6px; }
+  #multiDestMode, #wheelOfFortune { width: 22px !important; height: 22px !important; }
+  .results-header { flex-direction: column; align-items: stretch; }
+  .mc-card { padding: 16px; }
+  .cal-table { font-size: 0.75rem; }
+}
+button:focus-visible, select:focus-visible, input:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+@keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.mc-card { transition: transform 0.2s ease, box-shadow 0.2s ease; animation: fadeUp 0.35s ease both; }
+.mc-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(245,87,108,0.12); }
+.btn-primary { background-size: 150% 150%; }
+.btn-primary:hover { filter: brightness(1.05); }
+.btn-primary:active, .btn-secondary:active { transform: scale(0.98); }
+.dest-item { transition: background 0.2s, transform 0.15s; }
+.dest-item:active { transform: scale(0.98); }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header style="position:relative">
+    <div style="position:absolute;top:16px;right:16px;display:flex;gap:8px;align-items:center">
+      <button id="flagEl" onclick="setLang('el')" title="Ελληνικά" style="background:none;border:none;cursor:pointer;line-height:1;padding:2px">
+        <svg width="24" height="16" viewBox="0 0 27 18" xmlns="http://www.w3.org/2000/svg">
+          <rect width="27" height="18" fill="#ffffff"/>
+          <rect y="0" width="27" height="2" fill="#0D5EAF"/>
+          <rect y="4" width="27" height="2" fill="#0D5EAF"/>
+          <rect y="8" width="27" height="2" fill="#0D5EAF"/>
+          <rect y="12" width="27" height="2" fill="#0D5EAF"/>
+          <rect y="16" width="27" height="2" fill="#0D5EAF"/>
+          <rect width="10" height="10" fill="#0D5EAF"/>
+          <rect x="4" y="0" width="2" height="10" fill="#ffffff"/>
+          <rect x="0" y="4" width="10" height="2" fill="#ffffff"/>
+        </svg>
+      </button>
+      <button id="flagEn" onclick="setLang('en')" title="English" style="background:none;border:none;cursor:pointer;line-height:1;padding:2px">
+        <svg width="32" height="16" viewBox="0 0 60 30" xmlns="http://www.w3.org/2000/svg">
+          <clipPath id="ukS"><path d="M0,0 v30 h60 v-30 z"/></clipPath>
+          <clipPath id="ukT"><path d="M30,15 h30 v15 z v15 h-30 z h-30 v-15 z v-15 h30 z"/></clipPath>
+          <g clip-path="url(#ukS)">
+            <path d="M0,0 v30 h60 v-30 z" fill="#012169"/>
+            <path d="M0,0 L60,30 M60,0 L0,30" stroke="#ffffff" stroke-width="6"/>
+            <path d="M0,0 L60,30 M60,0 L0,30" clip-path="url(#ukT)" stroke="#C8102E" stroke-width="4"/>
+            <path d="M30,0 v30 M0,15 h60" stroke="#ffffff" stroke-width="10"/>
+            <path d="M30,0 v30 M0,15 h60" stroke="#C8102E" stroke-width="6"/>
+          </g>
+        </svg>
+      </button>
+    </div>
+    <h1>RyanairFlightPlanner v.2</h1>
+    <div class="city-selector">
+      <label for="originSelect" style="font-size:0.8rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px" data-i18n="origin">Αφετηρία:</label>
+      <select id="originSelect" onchange="onOriginChange()" style="padding:8px 14px;border-radius:20px;border:2px solid var(--accent);background:var(--surface);color:var(--accent);font-weight:700;font-size:1rem;outline:none;cursor:pointer;max-width:300px"></select>
+    </div>
+    <div class="badge" data-i18n="badge">Πραγματικές τιμές Ryanair &bull; Τιμές σε EUR &bull; Auto-refresh</div>
+  </header>
+
+  <div id="proxyInfo" class="cache-info" style="margin-bottom:12px;text-align:center">
+    <span data-i18n-html="true" data-i18n="proxyInfo">Λήψη πραγματικών τιμών μέσω proxy &bull; </span><span id="proxyStatus" data-i18n="init">Αρχικοποίηση...</span>
+  </div>
+
+  <section class="filters" id="filtersSection">
+    <div style="display:flex;justify-content:flex-end;margin-bottom:8px">
+      <button class="btn btn-secondary" id="filterToggleBtn" onclick="toggleFilters()" data-i18n="hideFilters" style="padding:6px 14px;font-size:0.75rem">Απόκρυψη φίλτρων ▲</button>
+    </div>
+    <div class="filter-grid">
+      <div class="filter-group" style="flex-direction:row;align-items:center;gap:8px;flex-wrap:wrap;grid-column:1/-1">
+        <label style="font-size:0.8rem;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:0.4px" data-i18n="type">Τύπος:</label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.9rem">
+          <input type="radio" name="tripType" value="roundtrip" checked onchange="onTripTypeChange()"> <span data-i18n="roundtrip">Με επιστροφή</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:4px;cursor:pointer;font-size:0.9rem">
+          <input type="radio" name="tripType" value="oneway" onchange="onTripTypeChange()"> <span data-i18n="oneway">Μονή διαδρομή</span>
+        </label>
+      </div>
+      <div class="filter-group">
+        <label data-i18n="dateFrom">Από ημερομηνία</label>
+        <input type="date" id="dateFrom">
+      </div>
+      <div class="filter-group">
+        <label data-i18n="dateTo">Έως ημερομηνία</label>
+        <input type="date" id="dateTo">
+      </div>
+      <div class="filter-group" id="nightsFilter">
+        <label data-i18n="nights">Διανυκτερεύσεις</label>
+        <div class="range-row">
+          <input type="number" id="minNights" min="1" max="30" value="2">
+          <span data-i18n="to">έως</span>
+          <input type="number" id="maxNights" min="1" max="30" value="5">
+        </div>
+      </div>
+      <div class="filter-group checkbox-group" id="weekendFilter">
+        <input type="checkbox" id="weekendOnly">
+        <label for="weekendOnly" data-i18n="weekend">Να περιλαμβάνει Σαββατοκύριακο</label>
+      </div>
+      <div style="border:2px solid #d32f2f;border-radius:12px;padding:12px 16px;display:flex;flex-direction:column;gap:8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <input type="checkbox" id="multiDestMode" style="width:18px;height:18px;accent-color:#d32f2f;cursor:pointer;flex-shrink:0" onchange="onMultiDestToggle()">
+          <label for="multiDestMode" style="color:#d32f2f;font-weight:800;font-size:0.95rem;cursor:pointer">Multi-Destination</label>
+        </div>
+        <div id="wheelOfFortuneRow" style="display:none;align-items:center;gap:10px;padding-left:28px">
+          <input type="checkbox" id="wheelOfFortune" style="width:18px;height:18px;accent-color:#d32f2f;cursor:pointer;flex-shrink:0" onchange="onWheelOfFortuneToggle()">
+          <label for="wheelOfFortune" style="font-weight:800;font-size:0.88rem;cursor:pointer;letter-spacing:0.5px">[ <span style="color:#e74c3c">W</span><span style="color:#e67e22">h</span><span style="color:#f1c40f">e</span><span style="color:#2ecc71">e</span><span style="color:#3498db">l</span> <span style="color:#9b59b6">o</span><span style="color:#e91e63">f</span> <span style="color:#e74c3c">f</span><span style="color:#e67e22">o</span><span style="color:#f1c40f">r</span><span style="color:#2ecc71">t</span><span style="color:#3498db">u</span><span style="color:#9b59b6">n</span><span style="color:#e91e63">e</span> ]</label>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="destinations-section">
+      <div class="destinations-header">
+        <span class="count" id="destCount" data-i18n="loadingDests">Φόρτωση προορισμών...</span>
+        <div class="destinations-actions" id="destActions">
+          <button class="btn btn-secondary" onclick="selectAllDestinations(true)" data-i18n="selectAll">Επιλογή όλων</button>
+          <button class="btn btn-secondary" onclick="selectAllDestinations(false)" data-i18n="clear">Αποεπιλογή</button>
+        </div>
+      </div>
+      <div class="destinations-grid" id="destGrid">
+        <div class="loading" style="padding:20px"><div class="spinner"></div></div>
+      </div>
+    </div>
+
+    <div id="cacheInfo" class="cache-info">
+      <span class="dot empty" id="cacheDot"></span>
+      <span id="cacheText" data-i18n="init">Αρχικοποίηση...</span>
+    </div>
+    <div id="noteText" style="font-style:italic;font-size:0.82rem;color:var(--text2);margin-bottom:8px;line-height:1.5;padding:0 2px" data-i18n-html="true" data-i18n="note"></div>
+    <div class="search-row">
+      <button class="btn btn-primary" id="searchBtn" onclick="search()" data-i18n="search">Αναζήτηση</button>
+    </div>
+  </section>
+
+  <section class="results" id="resultsSection">
+    <div class="results-header">
+      <h2 data-i18n="results">Αποτελέσματα</h2>
+      <div class="results-controls">
+        <select id="sortBy" onchange="reSortResults()">
+          <option value="price" data-i18n="cheapest">Φθηνότερα</option>
+          <option value="date" data-i18n="depDate">Ημερομηνία αναχώρησης</option>
+        </select>
+        <select id="simpleNightsFilter" onchange="filterSimpleNights()" style="display:none;padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.85rem;outline:none;cursor:pointer">
+          <option value="ALL" data-i18n="wheelAllNights">Όλες οι διανυκτερεύσεις</option>
+        </select>
+        <span class="info" id="resultsInfo"></span>
+      </div>
+    </div>
+    <div id="resultsContent">
+      <div class="empty-msg">
+        <div class="big-icon">&#9992;</div>
+        <p data-i18n="emptyInit">Επιλέξτε προορισμούς και πατήστε "Αναζήτηση"</p>
+      </div>
+    </div>
+  </section>
+</div>
+
+<script>
+const CORS_PROXIES = [
+  'https://api.cors.lol/?url=',
+  'https://corsproxy.io/?url=',
+  'https://corsproxy.georgev.workers.dev/?url='
+];
+const CURRENCY = 'EUR';
+
+/* --- i18n (Ελληνικά / English) --- */
+let currentLang = 'el';
+try { currentLang = localStorage.getItem('rfpLang') || 'el'; } catch (e) {}
+
+const I18N = {
+  origin: { el: 'Αφετηρία:', en: 'Origin:' },
+  badge: { el: 'Πραγματικές τιμές Ryanair • Τιμές σε EUR • Auto-refresh', en: 'Real Ryanair prices • Prices in EUR • Auto-refresh' },
+  init: { el: 'Αρχικοποίηση...', en: 'Initializing...' },
+  proxyInfo: { el: 'Λήψη πραγματικών τιμών μέσω proxy • ', en: 'Fetching real prices via proxy • ' },
+  type: { el: 'Τύπος:', en: 'Trip type:' },
+  roundtrip: { el: 'Με επιστροφή', en: 'Round trip' },
+  oneway: { el: 'Μονή διαδρομή', en: 'One way' },
+  dateFrom: { el: 'Από ημερομηνία', en: 'From date' },
+  dateTo: { el: 'Έως ημερομηνία', en: 'To date' },
+  nights: { el: 'Διανυκτερεύσεις', en: 'Nights' },
+  to: { el: 'έως', en: 'to' },
+  weekend: { el: 'Να περιλαμβάνει Σαββατοκύριακο', en: 'Include weekend' },
+  loadingDests: { el: 'Φόρτωση προορισμών...', en: 'Loading destinations...' },
+  selectAll: { el: 'Επιλογή όλων', en: 'Select all' },
+  clear: { el: 'Αποεπιλογή', en: 'Clear' },
+  note: {
+    el: '<u><strong>ΣΗΜΕΙΩΣΗ:</strong></u> <strong>Multidestination</strong>: Προορισμός μέσω ενδιάμεσου σταθμού / <strong>Wheel of fortune</strong>: Τυχαίος προορισμός (μέσω ενδιάμεσου σταθμού)',
+    en: '<u><strong>NOTE:</strong></u> <strong>Multidestination</strong>: Destination via intermediate station / <strong>Wheel of Fortune</strong>: Random destination (via intermediate station)'
+  },
+  search: { el: 'Αναζήτηση', en: 'Search' },
+  searching: { el: 'Αναζήτηση...', en: 'Searching...' },
+  results: { el: 'Αποτελέσματα', en: 'Results' },
+  cheapest: { el: 'Φθηνότερα', en: 'Cheapest' },
+  depDate: { el: 'Ημερομηνία αναχώρησης', en: 'Departure date' },
+  emptyInit: { el: 'Επιλέξτε προορισμούς και πατήστε "Αναζήτηση"', en: 'Select destinations and press "Search"' },
+  pickDates: { el: 'Επιλέξτε ημερομηνίες.', en: 'Select dates.' },
+  pickDest: { el: 'Επιλέξτε έναν προορισμό.', en: 'Select a destination.' },
+  pickDestPlural: { el: 'Επιλέξτε τουλάχιστον έναν προορισμό.', en: 'Select at least one destination.' },
+  dateOrder: { el: 'Η "Από" πρέπει να είναι πριν την "Έως".', en: '"From" must be before "To".' },
+  selectedCount: { el: '{n} / {m} επιλεγμένοι', en: '{n} / {m} selected' },
+  pickOne: { el: 'Επιλέξτε έναν προορισμό', en: 'Select a destination' },
+  selectedOne: { el: 'Επιλέχθηκε {code}', en: 'Selected {code}' },
+  fetching: { el: 'Λήψη τιμών...', en: 'Fetching prices...' },
+  fetchingRoutes: { el: 'Λήψη δρομολογίων...', en: 'Fetching schedules...' },
+  fetchingAll: { el: 'Λήψη τιμών για όλους τους συνδυασμούς...', en: 'Fetching prices for all combinations...' },
+  fetchingReal: { el: 'Λήψη πραγματικών τιμών από Ryanair...', en: 'Fetching real prices from Ryanair...' },
+  scanning: { el: 'Σάρωση δρομολογίων', en: 'Scanning schedules' },
+  connecting: { el: 'συνδέσεις', en: 'connections' },
+  retry: { el: 'επανάληψη...', en: 'retry...' },
+  calcMulti: { el: 'Υπολογισμός multi-city...', en: 'Computing multi-city...' },
+  updated: { el: 'Ενημερώθηκε {time} — {n} προορισμοί', en: 'Updated {time} — {n} destinations' },
+  error: { el: 'Σφάλμα', en: 'Error' },
+  completed: { el: 'Ολοκληρώθηκε — {n} διαδρομές', en: 'Completed — {n} routes' },
+  mcHeader: { el: 'Επιλέξτε τελικό προορισμό (οποιοδήποτε αεροδρόμιο της Ryanair) — με πράσινο: απευθείας πτήση από την αφετηρία', en: 'Select a final destination (any Ryanair airport) — green: direct flight from the origin' },
+  mcTitle: { el: 'Multi-Destination: {org} → {dest}', en: 'Multi-Destination: {org} → {dest}' },
+  foundRoutes: { el: 'Βρέθηκαν {n} διαδρομές', en: '{n} routes found' },
+  cheapestSort: { el: 'Φθηνότερο', en: 'Cheapest' },
+  nightsSort: { el: 'Διανυκτερεύσεις', en: 'Nights' },
+  oneWayLabel: { el: 'Μονή διαδρομή', en: 'One way' },
+  totalLabel: { el: 'Σύνολο', en: 'Total' },
+  nightsShort: { el: '{n} διαν.', en: '{n} nts' },
+  flights: { el: 'Πτήσεις', en: 'Flights' },
+  outbound: { el: 'ΜΕΤΑΒΑΣΗ', en: 'OUTBOUND' },
+  return: { el: 'ΕΠΙΣΤΡΟΦΗ', en: 'RETURN' },
+  oneNight: { el: '1 διαν.', en: '1 nt' },
+  sameDay: { el: 'ίδια μέρα', en: 'same day' },
+  viaWord: { el: ' via ', en: ' via ' },
+  noRoutes: { el: 'Δεν βρέθηκαν διαθέσιμες διαδρομές με ενδιάμεσους σταθμούς.', en: 'No available routes with intermediate stops found.' },
+  showing500: { el: 'Εμφανίζονται οι 500 πρώτες από {n} διαδρομές', en: 'Showing the first 500 of {n} routes' },
+  mcRoutesFor: { el: '{n} multi-destination διαδρομές για {dest}', en: '{n} multi-destination routes for {dest}' },
+  outgoing: { el: 'Μετάβαση', en: 'Outbound' },
+  inbound: { el: 'Επιστροφή', en: 'Return' },
+  oneWayDash: { el: 'Μονή διαδρομή — ', en: 'One way — ' },
+  foundFlights: { el: 'Βρέθηκαν {n} πτήσεις', en: 'Found {n} flights' },
+  foundCombos: { el: 'Βρέθηκαν {n} συνδυασμοί', en: 'Found {n} combinations' },
+  cheapestPlural: { el: 'οι {n} φθηνότεροι', en: 'the {n} cheapest' },
+  closestDates: { el: 'οι {n} πιο κοντινές ημερομηνίες', en: 'the {n} closest dates' },
+  multiCityAdd: { el: ' + {n} multi-city', en: ' + {n} multi-city' },
+  noResults: { el: 'Δεν βρέθηκαν αποτελέσματα.', en: 'No results found.' },
+  tryOtherDates: { el: 'Δοκιμάστε άλλες ημερομηνίες.', en: 'Try different dates.' },
+  noApiData: { el: 'Δεν ελήφθησαν τιμές από το Ryanair API. Δοκιμάστε ξανά ή ελέγξτε τη σύνδεσή σας.', en: 'No prices received from the Ryanair API. Try again or check your connection.' },
+  calTitle: { el: 'Ημερολόγιο τιμών μετ\' επιστροφής', en: 'Round-trip price calendar' },
+  cities: { el: 'ΠΟΛΕΙΣ', en: 'CITIES' },
+  dayNames: { el: ['ΚΥ','ΔΕ','ΤΡ','ΤΕ','ΠΕ','ΠΑ','ΣΑ'], en: ['SU','MO','TU','WE','TH','FR','SA'] },
+  destCol: { el: 'Προορισμός', en: 'Destination' },
+  depCol: { el: 'Αναχώρηση', en: 'Departure' },
+  retCol: { el: 'Επιστροφή', en: 'Return' },
+  nightsCol: { el: 'Διαν.', en: 'Nts' },
+  outCol: { el: 'Out €', en: 'Out €' },
+  inCol: { el: 'In €', en: 'In €' },
+  totalCol: { el: 'Σύνολο €', en: 'Total €' },
+  mcProposals: { el: 'Προτάσεις multi-city', en: 'Multi-city proposals' },
+  saving: { el: 'εξοικονόμηση {n} €', en: 'saving {n} €' },
+  notFound: { el: 'Δεν βρέθηκαν διαθέσιμες διαδρομές.', en: 'No available routes found.' },
+  originWord: { el: 'Αφετηρία', en: 'Origin' },
+  other: { el: 'Άλλο', en: 'Other' },
+  wheelOfFortuneActive: { el: 'Τροχός της τύχης — όλοι οι προορισμοί', en: 'Wheel of Fortune — all destinations' },
+  wheelOfFortuneGridMsg: { el: 'Ο "Τροχός της τύχης" ενεργοποιήθηκε — θα ελεγχθούν όλοι οι προορισμοί αυτόματα.', en: '"Wheel of Fortune" is enabled — all destinations will be checked automatically.' },
+  wheelOfFortuneLabel: { el: 'Τροχός της τύχης', en: 'Wheel of Fortune' },
+  wheelAllDests: { el: 'Όλοι οι προορισμοί', en: 'All destinations' },
+  wheelFilterDest: { el: 'Φίλτρο προορισμού', en: 'Destination filter' },
+  wheelTop10: { el: 'Τοπ 10 φθηνότεροι προορισμοί', en: 'Top 10 cheapest destinations' },
+  wheelAllNights: { el: 'Όλες οι διανυκτερεύσεις', en: 'All nights' },
+  wheelWaitAll: { el: 'Όλοι οι χρόνοι αναμονής', en: 'All waiting times' },
+  wheelWaitShort: { el: '< 3 ώρες αναμονή', en: '< 3 hours wait' },
+  wheelWaitMed: { el: '3-6 ώρες αναμονή', en: '3-6 hours wait' },
+  wheelWaitLong: { el: '> 6 ώρες αναμονή', en: '> 6 hours wait' },
+  wheelWaitShortBoth: { el: '< 3 ώρες και στις 2 πτήσεις', en: '< 3 hours both flights' },
+  wheelWaitMedBoth: { el: '3-6 ώρες και στις 2 πτήσεις', en: '3-6 hours both flights' },
+  wheelWaitLongBoth: { el: '> 6 ώρες και στις 2 πτήσεις', en: '> 6 hours both flights' },
+  cancel: { el: 'Ακύρωση', en: 'Cancel' },
+  cancelled: { el: 'Η αναζήτηση ακυρώθηκε', en: 'Search cancelled' },
+  waitBadge: { el: 'Αναμ. {n}ω', en: 'Wait {n}h' },
+  hideFilters: { el: 'Απόκρυψη φίλτρων ▲', en: 'Hide filters ▲' },
+  showFilters: { el: 'Εμφάνιση φίλτρων ▼', en: 'Show filters ▼' }
+};
+
+function t(key, vars) {
+  let s = (I18N[key] && I18N[key][currentLang]) || key;
+  if (vars) for (const k of Object.keys(vars)) s = s.split('{'+k+'}').join(String(vars[k]));
+  return s;
+}
+
+function cityName(code, fallback) {
+  const g = getGreekName(code, fallback || MASTER_AIRPORT_NAMES[code] || code);
+  if (currentLang === 'el') return g;
+  return REV_GREEK[g] || g;
+}
+
+function getOriginDisplayName(code) {
+  return cityName(code, MASTER_AIRPORT_NAMES[code] || code);
+}
+
+function applyI18n() {
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const vars = el.getAttribute('data-i18n-vars');
+    let val = t(key, vars ? JSON.parse(vars) : null);
+    if (el.hasAttribute('data-i18n-html')) el.innerHTML = val; else el.textContent = val;
+  });
+  const sel = document.getElementById('sortBy');
+  if (sel) {
+    const o = sel.options;
+    o[0].text = t('cheapest'); o[1].text = t('depDate');
+  }
+  const title = document.querySelector('title');
+  if (title) title.textContent = currentLang === 'en' ? 'RyanairFlightPlanner v.2 - Multi-Destination' : 'RyanairFlightPlanner v.2 - Multi-Destination Ryanair από Ελλάδα';
+}
+
+function setLang(lang) {
+  currentLang = lang;
+  try { localStorage.setItem('rfpLang', lang); } catch (e) {}
+  if (document.documentElement) document.documentElement.lang = lang;
+  const fel = document.getElementById('flagEl');
+  const fen = document.getElementById('flagEn');
+  const applyFlag = (btn, active) => {
+    if (!btn) return;
+    btn.style.opacity = active ? '1' : '0.45';
+    btn.style.filter = active ? 'none' : 'grayscale(0.8)';
+  };
+  applyFlag(fel, lang === 'el');
+  applyFlag(fen, lang === 'en');
+  applyI18n();
+  const sel = document.getElementById('originSelect');
+  if (sel) initOriginSelect();
+  loadDestinations();
+  updateDestCount();
+  if (lastMultiDestPaths) displayMultiDestResults(lastMultiDestPaths, lastMultiDestCityNames, lastMultiDestDays, lastMultiDestOrigin);
+  else if (lastResults.length > 0 || lastMcResults.length > 0) renderResults();
+}
+
+let allDestinations = [];
+const selectedDestinations = new Set();
+const selectedIntermediates = new Set();
+let mcActiveTab = 'direct';
+let isSearching = false;
+let searchCancelled = false;
+/* Session cache τιμών: αποφυγή διπλών κλήσεων API στην ίδια συνεδρία (TTL 10 λεπτά) */
+const fareCache = {};
+const FARE_TTL_MS = 10 * 60 * 1000;
+let lastResults = [];
+let lastMcResults = [];
+let lastFaresData = {};
+let lastMultiDestPaths = null;
+let lastMultiDestCityNames = null;
+let lastMultiDestDays = 0;
+let lastMultiDestOrigin = '';
+let lastMultiDestDestCode = '';
+let lastMultiDestDestName = '';
+let wheelOfFortuneMode = false;
+let wheelFilterDest = 'ALL';
+let wheelFilterNights = 'ALL';
+let wheelFilterWait = 'ALL';
+let simpleFilterNights = 'ALL';
+
+let currentOrigin = 'SKG';
+
+/* --- Master airport list: all Ryanair airports from all origin lists --- */
+function buildMasterAirportList() {
+  const seen = new Set();
+  const all = [];
+  const allLists = [DESTINATIONS_SKG, DESTINATIONS_ATH, DESTINATIONS_CHQ, DESTINATIONS_RHO,
+    DESTINATIONS_STN, DESTINATIONS_DUB, DESTINATIONS_BGY, DESTINATIONS_MAD,
+    DESTINATIONS_BCN, DESTINATIONS_AGP, DESTINATIONS_CRL, DESTINATIONS_ALC,
+    DESTINATIONS_BER, DESTINATIONS_SOF];
+  for (const list of allLists) {
+    for (const d of list) {
+      if (!seen.has(d.code)) { seen.add(d.code); all.push(d); }
+    }
+  }
+  const originCodes = ['SKG','ATH','CHQ','RHO','STN','DUB','BGY','MAD','BCN','AGP','CRL','ALC','BER','SOF'];
+  const originNames = {SKG:'Θεσσαλονίκη',ATH:'Αθήνα',CHQ:'Χανιά',RHO:'Ρόδος',STN:'Λονδίνο',DUB:'Δουβλίνο',BGY:'Μπέργκαμο',MAD:'Μαδρίτη',BCN:'Βαρκελώνη',AGP:'Μάλαγα',CRL:'Σαρλερουά',ALC:'Αλικάντε',BER:'Βερολίνο',SOF:'Σόφια'};
+  for (const oc of originCodes) {
+    if (!seen.has(oc)) { seen.add(oc); all.push({code:oc, city:originNames[oc]||oc, country:''}); }
+  }
+  return all;
+}
+
+/* Greek names for common Ryanair airports that may have English names in the data */
+const GREEK_CITY_NAMES = {
+  'Aarhus':'Ώρχους','Aberdeen':'Αμπερντήν','Agadir':'Αγκαντίρ','Alghero':'Αλγκέρο',
+  'Alicante':'Αλικάντε','Amman':'Αμμάν','Amsterdam':'Άμστερνταμ','Ancona':'Ανκόνα',
+  'Barcelona':'Βαρκελώνη','Bari':'Μπάρι','Basel':'Βασιλεία','Beziers':'Μπεζιέ',
+  'Biarritz':'Μπιαρίτζ','Birmingham':'Μπέρμιγχαμ','Bodrum':'Μπόντρουμ',
+  'Bologna':'Μπολόνια','Bordeaux':'Μπορντό','Bournemouth':'Μπόρνμουθ',
+  'Bratislava':'Μπρατισλάβα','Bremen':'Βρέμη','Brindisi':'Μπρίντιζι',
+  'Bristol':'Μπρίστολ','Brno':'Μπρνο','Brussels':'Βρυξέλλες','Bucharest':'Βουκουρέστι',
+  'Budapest':'Βουδαπέστη','Bydgoszcz':'Μπίντγκοστς','Cagliari':'Κάλιαρι',
+  'Carcassonne':'Καρκασόν','Cardiff':'Κάρντιφ','Castellon':'Καστεγιόν',
+  'Catania':'Κατάνια','Charleroi':'Σαρλερουά','Cluj':'Κλούζ',
+  'Cologne':'Κολωνία','Copenhagen':'Κοπεγχάγη','Cork':'Κορκ',
+  'Dalaman':'Νταλαμάν','Dublin':'Δουβλίνο','Dubrovnik':'Ντουμπρόβνικ',
+  'Dusseldorf':'Ντίσελντορφ','East Midlands':'Ανατ. Μίντλαντς','Edinburgh':'Εδιμβούργο',
+  'Eindhoven':'Αϊντχόβεν','Essaouira':'Εσσαουίρα','Exeter':'Έξετερ',
+  'Faro':'Φάρο','Fez':'Φεζ','Frankfurt':'Φρανκφούρτη','Friedrichshafen':'Φρίντριχσχαφεν',
+  'Fuerteventura':'Φουερτεβεντούρα','Funchal':'Φουνσάλ','Gdansk':'Γκντανσκ',
+  'Genoa':'Γένοβα','Girona':'Ζιρόνα','Glasgow':'Γλασκώβη','Gothenburg':'Γκέτεμποργκ',
+  'Gran Canaria':'Γκραν Κανάρια','Grenoble':'Γκρενόμπλ','Hamburg':'Αμβούργο',
+  'Helsinki':'Ελσίνκι','Ibiza':'Ίμπιζα','Iasi':'Ιάσιο','Karlsruhe':'Καρλσρούη',
+  'Katowice':'Κατοβίτσε','Kaunas':'Κάουνας','Klagenfurt':'Κλάγκενφουρτ',
+  'Knock':'Νοκ','Kosice':'Κόσιτσε','Krakow':'Κρακοβία',
+  'La Rochelle':'Λα Ροσέλ','Lamezia':'Λαμέτσια','Lanzarote':'Λανθαρότε',
+  'Leeds':'Λιντς','Linz':'Λιντς','Lisbon':'Λισαβόνα','Liverpool':'Λίβερπουλ',
+  'Lodz':'Λοτζ','London':'Λονδίνο','Lourdes':'Λούρδη','Lubeck':'Λίμπεκ',
+  'Lublin':'Λούμπλιν','Luxembourg':'Λουξεμβούργο','Madrid':'Μαδρίτη',
+  'Malaga':'Μάλαγα','Malmo':'Μάλμε','Malta':'Μάλτα','Manchester':'Μάντσεστερ',
+  'Marrakesh':'Μαρακές','Marseille':'Μασσαλία','Memmingen':'Μέμινγκεν',
+  'Menorca':'Μενόρκα','Milan':'Μιλάνο','Munster':'Μίνστερ','Murcia':'Μούρθια',
+  'Nantes':'Νάντη','Naples':'Νάπολη','Newcastle':'Νιούκαστλ','Newquay':'Νιουκέι',
+  'Nice':'Νίκαια','Nimes':'Νιμ','Norwich':'Νόργουιτς','Nuremberg':'Νυρεμβέργη',
+  'Olbia':'Όλμπια','Osijek':'Οσίγιεκ','Oslo':'Όσλο','Ostrava':'Οστράβα',
+  'Oujda':'Ούζντα','Paderborn':'Πάντερμπορν','Palanga':'Παλάνγκα',
+  'Palermo':'Παλέρμο','Palma':'Πάλμα','Paris':'Παρίσι','Parma':'Πάρμα',
+  'Perpignan':'Περπινιάν','Perugia':'Περούτζια','Pescara':'Πεσκάρα',
+  'Pisa':'Πίζα','Plovdiv':'Πλόβντιβ','Podgorica':'Ποντγκόριτσα',
+  'Poitiers':'Πουατιέ','Porto':'Πόρτο','Poznan':'Πόζναν','Prague':'Πράγα',
+  'Pula':'Πούλα','Rabat':'Ραμπάτ','Reggio Calabria':'Ρέτζιο Καλάμπρια',
+  'Reus':'Ρέους','Riga':'Ρίγα','Rijeka':'Ριέκα','Rimini':'Ρίμινι',
+  'Rome':'Ρώμη','Rovaniemi':'Ροβανιέμι','Rzeszow':'Ζέσουβ','Salerno':'Σαλέρνο',
+  'Salzburg':'Σάλτσμπουργκ','Sandefjord':'Σάντεφγιορντ','Santander':'Σανταντέρ',
+  'Santiago':'Σαντιάγο','Saarbrucken':'Σαρμπρύκεν','Sarajevo':'Σαράγεβο',
+  'Seville':'Σεβίλλη','Shannon':'Σάνον','Split':'Σπλιτ','Stockholm':'Στοκχόλμη',
+  'Szczecin':'Στσέτσιν','Tallinn':'Τάλιν','Tangier':'Ταγγέρη',
+  'Teesside':'Τίσαϊντ','Tenerife':'Τενερίφη','Tetouan':'Τετουάν',
+  'Tirana':'Τίρανα','Toulouse':'Τουλούζη','Tours':'Τουρ','Trapani':'Τραπάνι',
+  'Trieste':'Τεργέστη','Turin':'Τορίνο','Valencia':'Βαλένθια','Venice':'Βενετία',
+  'Verona':'Βερόνα','Vienna':'Βιέννη','Vilnius':'Βίλνιους',
+  'Vitoria-Gasteiz':'Βιτόρια','Warsaw':'Βαρσοβία','Wroclaw':'Βρότσλαβ',
+  'Zadar':'Ζάνταρ','Zagreb':'Ζάγκρεμπ','Zaragoza':'Σαραγόσα','Zurich':'Ζυρίχη',
+  'Athens':'Αθήνα','Thessaloniki':'Θεσσαλονίκη','Chania':'Χανιά','Heraklion':'Ηράκλειο',
+  'Rhodes':'Ρόδος','Corfu':'Κέρκυρα','Santorini':'Σαντορίνη','Kos':'Κως',
+  'Kefalonia':'Κεφαλονιά','Skiathos':'Σκιάθος','Preveza':'Πρέβεζα','Volos':'Βόλος',
+  'Zakynthos':'Ζάκυνθος','Paphos':'Πάφος','Kalamata':'Καλαμάτα','Lemnos':'Λήμνος',
+  'Sofia':'Σόφια','Burgas':'Μπουργκάς','Berlin':'Βερολίνο','Belfast':'Μπέλφαστ',
+  'Tel Aviv':'Τελ Αβίβ'
+};
+
+/* Same as above but keyed by airport code for overrides */
+const GREEK_CODE_NAMES = {
+  'STN':'Λονδίνο','LTN':'Λονδίνο','LGW':'Λονδίνο','FCO':'Ρώμη','CIA':'Ρώμη',
+  'MXP':'Μιλάνο','BGY':'Μπέργκαμο','CRL':'Σαρλερουά','BVA':'Παρίσι',
+  'HHN':'Φρανκφούρτη','TSF':'Βενετία','VCE':'Βενετία','NRN':'Ντίσελντορφ',
+  'FKB':'Καρλσρούη','FMM':'Μέμινγκεν','NUE':'Νυρεμβέργη'
+};
+
+function getGreekName(code, fallback) {
+  if (GREEK_CODE_NAMES[code]) return GREEK_CODE_NAMES[code];
+  if (GREEK_CITY_NAMES[fallback]) return GREEK_CITY_NAMES[fallback];
+  return fallback;
+}
+
+const REV_GREEK = {};
+for (const [enName, elName] of Object.entries(GREEK_CITY_NAMES)) REV_GREEK[elName] = enName;
+
+const DESTINATIONS_SKG = [
+  {code:"ARN",city:"Στοκχόλμη",country:"Sweden"},{code:"BER",city:"Βερολίνο",country:"Germany"},
+  {code:"BGY",city:"Μπέργκαμο",country:"Italy"},{code:"BLQ",city:"Μπολόνια",country:"Italy"},
+  {code:"BTS",city:"Μπρατισλάβα",country:"Slovakia"},{code:"BUD",city:"Βουδαπέστη",country:"Hungary"},
+  {code:"BVA",city:"Παρίσι",country:"France"},{code:"CHQ",city:"Χανιά",country:"Greece"},
+  {code:"CPH",city:"Κοπεγχάγη",country:"Denmark"},{code:"CRL",city:"Σαρλερουά",country:"Belgium"},
+  {code:"DUB",city:"Δουβλίνο",country:"Ireland"},{code:"EIN",city:"Αϊντχόβεν",country:"Netherlands"},
+  {code:"FCO",city:"Ρώμη",country:"Italy"},{code:"FKB",city:"Καρλσρούη",country:"Germany"},
+  {code:"FMM",city:"Μέμινγκεν",country:"Germany"},{code:"GOT",city:"Γκέτεμποργκ",country:"Sweden"},
+  {code:"HEL",city:"Ελσίνκι",country:"Finland"},{code:"HER",city:"Ηράκλειο",country:"Greece"},
+  {code:"HHN",city:"Φρανκφούρτη",country:"Germany"},{code:"KRK",city:"Κρακοβία",country:"Poland"},
+  {code:"MLA",city:"Μάλτα",country:"Malta"},{code:"NAP",city:"Νάπολη",country:"Italy"},
+  {code:"NRN",city:"Ντίσελντορφ",country:"Germany"},{code:"NUE",city:"Νυρεμβέργη",country:"Germany"},
+  {code:"OTP",city:"Βουκουρέστι",country:"Romania"},{code:"PFO",city:"Πάφος",country:"Cyprus"},
+  {code:"POZ",city:"Πόζναν",country:"Poland"},{code:"SJJ",city:"Σαράγεβο",country:"Bosnia"},
+  {code:"STN",city:"Λονδίνο",country:"UK"},{code:"TSF",city:"Βενετία",country:"Italy"},
+  {code:"VIE",city:"Βιέννη",country:"Austria"},{code:"WMI",city:"Βαρσοβία",country:"Poland"},
+  {code:"ZAG",city:"Ζάγκρεμπ",country:"Croatia"}
+];
+
+const DESTINATIONS_ATH = [
+  {code:"BER",city:"Βερολίνο",country:"Germany"},{code:"BGY",city:"Μπέργκαμο",country:"Italy"},
+  {code:"BLQ",city:"Μπολόνια",country:"Italy"},{code:"BRI",city:"Μπάρι",country:"Italy"},
+  {code:"BTS",city:"Μπρατισλάβα",country:"Slovakia"},{code:"BUD",city:"Βουδαπέστη",country:"Hungary"},
+  {code:"CFU",city:"Κέρκυρα",country:"Greece"},{code:"CGN",city:"Κολωνία",country:"Germany"},
+  {code:"CHQ",city:"Χανιά",country:"Greece"},{code:"CRL",city:"Σαρλερουά",country:"Belgium"},
+  {code:"CTA",city:"Κατάνια",country:"Italy"},{code:"DUB",city:"Δουβλίνο",country:"Ireland"},
+  {code:"FCO",city:"Ρώμη",country:"Italy"},{code:"JTR",city:"Σαντορίνη",country:"Greece"},
+  {code:"KRK",city:"Κρακοβία",country:"Poland"},{code:"KTW",city:"Κατοβίτσε",country:"Poland"},
+  {code:"LTN",city:"Λονδίνο",country:"UK"},{code:"MLA",city:"Μάλτα",country:"Malta"},
+  {code:"MXP",city:"Μιλάνο",country:"Italy"},{code:"PFO",city:"Πάφος",country:"Cyprus"},
+  {code:"STN",city:"Λονδίνο",country:"UK"},{code:"VCE",city:"Βενετία",country:"Italy"},
+  {code:"VIE",city:"Βιέννη",country:"Austria"},{code:"VNO",city:"Βίλνιους",country:"Lithuania"},
+  {code:"WMI",city:"Βαρσοβία",country:"Poland"},{code:"WRO",city:"Βρότσλαβ",country:"Poland"}
+];
+
+const DESTINATIONS_CHQ = [
+  {code:"ATH",city:"Αθήνα",country:"Greece"},{code:"BER",city:"Βερολίνο",country:"Germany"},
+  {code:"BGY",city:"Μπέργκαμο",country:"Italy"},{code:"BHX",city:"Μπέρμιγχαμ",country:"UK"},
+  {code:"BLQ",city:"Μπολόνια",country:"Italy"},{code:"BOH",city:"Μπόρνμουθ",country:"UK"},
+  {code:"BUD",city:"Βουδαπέστη",country:"Hungary"},{code:"CRL",city:"Σαρλερουά",country:"Belgium"},
+  {code:"DUB",city:"Δουβλίνο",country:"Ireland"},{code:"EDI",city:"Εδιμβούργο",country:"UK"},
+  {code:"EMA",city:"Ανατ. Μίντλαντς",country:"UK"},{code:"FCO",city:"Ρώμη",country:"Italy"},
+  {code:"GDN",city:"Γκντανσκ",country:"Poland"},{code:"HHN",city:"Φρανκφούρτη",country:"Germany"},
+  {code:"KRK",city:"Κρακοβία",country:"Poland"},{code:"LBA",city:"Λιντς",country:"UK"},
+  {code:"LPL",city:"Λίβερπουλ",country:"UK"},{code:"MAN",city:"Μάντσεστερ",country:"UK"},
+  {code:"MLA",city:"Μάλτα",country:"Malta"},{code:"NAP",city:"Νάπολη",country:"Italy"},
+  {code:"NCL",city:"Νιούκαστλ",country:"UK"},{code:"NRN",city:"Ντίσελντορφ",country:"Germany"},
+  {code:"PFO",city:"Πάφος",country:"Cyprus"},{code:"PSA",city:"Πίζα",country:"Italy"},
+  {code:"SKG",city:"Θεσσαλονίκη",country:"Greece"},{code:"SOF",city:"Σόφια",country:"Bulgaria"},
+  {code:"STN",city:"Λονδίνο",country:"UK"},{code:"TLV",city:"Τελ Αβίβ",country:"Israel"},
+  {code:"TSF",city:"Βενετία",country:"Italy"},{code:"VIE",city:"Βιέννη",country:"Austria"},
+  {code:"WMI",city:"Βαρσοβία",country:"Poland"},{code:"WRO",city:"Βρότσλαβ",country:"Poland"}
+];
+
+const DESTINATIONS_RHO = [
+  {code:"ARN",city:"Στοκχόλμη",country:"Sweden"},{code:"BER",city:"Βερολίνο",country:"Germany"},
+  {code:"BGY",city:"Μπέργκαμο",country:"Italy"},{code:"BHX",city:"Μπέρμιγχαμ",country:"UK"},
+  {code:"BLQ",city:"Μπολόνια",country:"Italy"},{code:"BOH",city:"Μπόρνμουθ",country:"UK"},
+  {code:"BRI",city:"Μπάρι",country:"Italy"},{code:"BUD",city:"Βουδαπέστη",country:"Hungary"},
+  {code:"CIA",city:"Ρώμη Τσιαμπίνο",country:"Italy"},{code:"CRL",city:"Σαρλερουά",country:"Belgium"},
+  {code:"CTA",city:"Κατάνια",country:"Italy"},{code:"DUB",city:"Δουβλίνο",country:"Ireland"},
+  {code:"EDI",city:"Εδιμβούργο",country:"UK"},{code:"EMA",city:"Ανατ. Μίντλαντς",country:"UK"},
+  {code:"FCO",city:"Ρώμη",country:"Italy"},{code:"FMM",city:"Μέμινγκεν",country:"Germany"},
+  {code:"KRK",city:"Κρακοβία",country:"Poland"},{code:"KUN",city:"Κάουνας",country:"Lithuania"},
+  {code:"MAN",city:"Μάντσεστερ",country:"UK"},{code:"MRS",city:"Μασσαλία",country:"France"},
+  {code:"NAP",city:"Νάπολη",country:"Italy"},{code:"NRN",city:"Ντίσελντορφ",country:"Germany"},
+  {code:"ORK",city:"Κορκ",country:"Ireland"},{code:"PFO",city:"Πάφος",country:"Cyprus"},
+  {code:"PRG",city:"Πράγα",country:"Czechia"},{code:"PSA",city:"Πίζα",country:"Italy"},
+  {code:"SKG",city:"Θεσσαλονίκη",country:"Greece"},{code:"SOF",city:"Σόφια",country:"Bulgaria"},
+  {code:"STN",city:"Λονδίνο",country:"UK"},{code:"VIE",city:"Βιέννη",country:"Austria"},
+  {code:"WMI",city:"Βαρσοβία",country:"Poland"}
+];
+
+const DESTINATIONS_BER = [
+  {code:"ACE",city:"Lanzarote",country:"Spain"},{code:"AGP",city:"Malaga",country:"Spain"},
+  {code:"ALC",city:"Alicante",country:"Spain"},{code:"ATH",city:"Athens",country:"Greece"},
+  {code:"BCN",city:"Barcelona",country:"Spain"},{code:"BGY",city:"Bergamo",country:"Italy"},
+  {code:"BHX",city:"Birmingham",country:"United Kingdom"},{code:"BLQ",city:"Bologna",country:"Italy"},
+  {code:"BRI",city:"Bari",country:"Italy"},{code:"BUD",city:"Budapest",country:"Hungary"},
+  {code:"CDT",city:"Castellon",country:"Spain"},{code:"CFU",city:"Corfu",country:"Greece"},
+  {code:"CTA",city:"Catania",country:"Italy"},{code:"DBV",city:"Dubrovnik",country:"Croatia"},
+  {code:"DUB",city:"Dublin",country:"Ireland"},{code:"EDI",city:"Edinburgh",country:"United Kingdom"},
+  {code:"EMA",city:"East Midlands",country:"United Kingdom"},{code:"FAO",city:"Faro",country:"Portugal"},
+  {code:"FCO",city:"Rome",country:"Italy"},{code:"FUE",city:"Fuerteventura",country:"Spain"},
+  {code:"HER",city:"Heraklion",country:"Greece"},{code:"IBZ",city:"Ibiza",country:"Spain"},
+  {code:"KGS",city:"Kos",country:"Greece"},{code:"LIS",city:"Lisbon",country:"Portugal"},
+  {code:"LPA",city:"Gran Canaria",country:"Spain"},{code:"MAD",city:"Madrid",country:"Spain"},
+  {code:"MAN",city:"Manchester",country:"United Kingdom"},{code:"MRS",city:"Marseille",country:"France"},
+  {code:"MXP",city:"Milan",country:"Italy"},{code:"OPO",city:"Porto",country:"Portugal"},
+  {code:"OTP",city:"Bucharest",country:"Romania"},{code:"PFO",city:"Paphos",country:"Cyprus"},
+  {code:"PMI",city:"Palma",country:"Spain"},{code:"PMO",city:"Palermo",country:"Italy"},
+  {code:"PSA",city:"Pisa",country:"Italy"},{code:"RAK",city:"Marrakesh",country:"Morocco"},
+  {code:"REG",city:"Reggio Calabria",country:"Italy"},{code:"RHO",city:"Rhodes",country:"Greece"},
+  {code:"SKG",city:"Thessaloniki",country:"Greece"},{code:"SOF",city:"Sofia",country:"Bulgaria"},
+  {code:"STN",city:"London",country:"United Kingdom"},{code:"TFS",city:"Tenerife",country:"Spain"},
+  {code:"TGD",city:"Podgorica",country:"Montenegro"},{code:"TLL",city:"Tallinn",country:"Estonia"},
+  {code:"TRS",city:"Trieste",country:"Italy"},{code:"TSF",city:"Venice",country:"Italy"},
+  {code:"VCE",city:"Venice",country:"Italy"},{code:"VLC",city:"Valencia",country:"Spain"},
+  {code:"VNO",city:"Vilnius",country:"Lithuania"},{code:"ZAD",city:"Zadar",country:"Croatia"}
+];
+
+const DESTINATIONS_SOF = [
+  {code:"AGP",city:"Malaga",country:"Spain"},{code:"ALC",city:"Alicante",country:"Spain"},
+  {code:"AMM",city:"Amman",country:"Jordan"},{code:"BCN",city:"Barcelona",country:"Spain"},
+  {code:"BER",city:"Berlin",country:"Germany"},{code:"BGY",city:"Bergamo",country:"Italy"},
+  {code:"BHX",city:"Birmingham",country:"United Kingdom"},{code:"BLQ",city:"Bologna",country:"Italy"},
+  {code:"BRI",city:"Bari",country:"Italy"},{code:"BRS",city:"Bristol",country:"United Kingdom"},
+  {code:"BUD",city:"Budapest",country:"Hungary"},{code:"BVA",city:"Paris",country:"France"},
+  {code:"CFU",city:"Corfu",country:"Greece"},{code:"CGN",city:"Cologne",country:"Germany"},
+  {code:"CHQ",city:"Chania",country:"Greece"},{code:"CIA",city:"Rome",country:"Italy"},
+  {code:"CPH",city:"Copenhagen",country:"Denmark"},{code:"CRL",city:"Charleroi",country:"Belgium"},
+  {code:"CTA",city:"Catania",country:"Italy"},{code:"DUB",city:"Dublin",country:"Ireland"},
+  {code:"EDI",city:"Edinburgh",country:"United Kingdom"},{code:"EIN",city:"Eindhoven",country:"Netherlands"},
+  {code:"FKB",city:"Karlsruhe",country:"Germany"},{code:"FMM",city:"Memmingen",country:"Germany"},
+  {code:"HHN",city:"Frankfurt",country:"Germany"},{code:"JSI",city:"Skiathos",country:"Greece"},
+  {code:"KRK",city:"Krakow",country:"Poland"},{code:"LPL",city:"Liverpool",country:"United Kingdom"},
+  {code:"MAD",city:"Madrid",country:"Spain"},{code:"MLA",city:"Malta",country:"Malta"},
+  {code:"NAP",city:"Naples",country:"Italy"},{code:"NUE",city:"Nuremberg",country:"Germany"},
+  {code:"PFO",city:"Paphos",country:"Cyprus"},{code:"PMI",city:"Palma",country:"Spain"},
+  {code:"PMO",city:"Palermo",country:"Italy"},{code:"PSA",city:"Pisa",country:"Italy"},
+  {code:"RAK",city:"Marrakesh",country:"Morocco"},{code:"RHO",city:"Rhodes",country:"Greece"},
+  {code:"STN",city:"London",country:"United Kingdom"},{code:"SUF",city:"Lamezia",country:"Italy"},
+  {code:"TRN",city:"Turin",country:"Italy"},{code:"TSF",city:"Venice",country:"Italy"},
+  {code:"VIE",city:"Vienna",country:"Austria"},{code:"VLC",city:"Valencia",country:"Spain"},
+  {code:"WMI",city:"Warsaw",country:"Poland"},{code:"WRO",city:"Wroclaw",country:"Poland"},
+  {code:"ZAG",city:"Zagreb",country:"Croatia"}
+];
+
+const DESTINATIONS_STN = [
+  {code:"AAR",city:"Aarhus",country:"Denmark"},{code:"ACE",city:"Lanzarote",country:"Spain"},
+  {code:"AGA",city:"Agadir",country:"Morocco"},{code:"AGP",city:"Malaga",country:"Spain"},
+  {code:"AHO",city:"Alghero",country:"Italy"},{code:"ALC",city:"Alicante",country:"Spain"},
+  {code:"AOI",city:"Ancona",country:"Italy"},{code:"ARN",city:"Stockholm",country:"Sweden"},
+  {code:"ATH",city:"Athens",country:"Greece"},{code:"BCN",city:"Barcelona",country:"Spain"},
+  {code:"BDS",city:"Brindisi",country:"Italy"},{code:"BER",city:"Berlin",country:"Germany"},
+  {code:"BFS",city:"Belfast",country:"United Kingdom"},{code:"BGY",city:"Bergamo",country:"Italy"},
+  {code:"BIQ",city:"Biarritz",country:"France"},{code:"BJV",city:"Bodrum",country:"Turkey"},
+  {code:"BLQ",city:"Bologna",country:"Italy"},{code:"BRE",city:"Bremen",country:"Germany"},
+  {code:"BRI",city:"Bari",country:"Italy"},{code:"BRQ",city:"Brno",country:"Czech Republic"},
+  {code:"BSL",city:"Basel",country:"Switzerland"},{code:"BTS",city:"Bratislava",country:"Slovakia"},
+  {code:"BUD",city:"Budapest",country:"Hungary"},{code:"BVE",city:"Brive",country:"France"},
+  {code:"BZG",city:"Bydgoszcz",country:"Poland"},{code:"BZR",city:"Beziers",country:"France"},
+  {code:"CAG",city:"Cagliari",country:"Italy"},{code:"CCF",city:"Carcassonne",country:"France"},
+  {code:"CDT",city:"Castellon",country:"Spain"},{code:"CFU",city:"Corfu",country:"Greece"},
+  {code:"CGN",city:"Cologne",country:"Germany"},{code:"CHQ",city:"Chania",country:"Greece"},
+  {code:"CIA",city:"Rome",country:"Italy"},{code:"CLJ",city:"Cluj",country:"Romania"},
+  {code:"CPH",city:"Copenhagen",country:"Denmark"},{code:"CTA",city:"Catania",country:"Italy"},
+  {code:"DBV",city:"Dubrovnik",country:"Croatia"},{code:"DLM",city:"Dalaman",country:"Turkey"},
+  {code:"DUB",city:"Dublin",country:"Ireland"},{code:"EDI",city:"Edinburgh",country:"United Kingdom"},
+  {code:"EFL",city:"Kefalonia",country:"Greece"},{code:"EGC",city:"Bergerac",country:"France"},
+  {code:"EIN",city:"Eindhoven",country:"Netherlands"},{code:"ESU",city:"Essaouira",country:"Morocco"},
+  {code:"FAO",city:"Faro",country:"Portugal"},{code:"FEZ",city:"Fez",country:"Morocco"},
+  {code:"FKB",city:"Karlsruhe",country:"Germany"},{code:"FMM",city:"Memmingen",country:"Germany"},
+  {code:"FMO",city:"Munster",country:"Germany"},{code:"FNC",city:"Funchal",country:"Portugal"},
+  {code:"FNI",city:"Nimes",country:"France"},{code:"FRL",city:"Forli",country:"Italy"},
+  {code:"FUE",city:"Fuerteventura",country:"Spain"},{code:"GDN",city:"Gdansk",country:"Poland"},
+  {code:"GLA",city:"Glasgow",country:"United Kingdom"},{code:"GNB",city:"Grenoble",country:"France"},
+  {code:"GOA",city:"Genoa",country:"Italy"},{code:"GOT",city:"Gothenburg",country:"Sweden"},
+  {code:"GRO",city:"Girona",country:"Spain"},{code:"HAM",city:"Hamburg",country:"Germany"},
+  {code:"HEL",city:"Helsinki",country:"Finland"},{code:"HHN",city:"Frankfurt",country:"Germany"},
+  {code:"IBZ",city:"Ibiza",country:"Spain"},{code:"JTR",city:"Santorini",country:"Greece"},
+  {code:"KGS",city:"Kos",country:"Greece"},{code:"KIR",city:"Kerry",country:"Ireland"},
+  {code:"KLU",city:"Klagenfurt",country:"Austria"},{code:"KRK",city:"Krakow",country:"Poland"},
+  {code:"KSC",city:"Kosice",country:"Slovakia"},{code:"KTW",city:"Katowice",country:"Poland"},
+  {code:"KUN",city:"Kaunas",country:"Lithuania"},{code:"LBC",city:"Lubeck",country:"Germany"},
+  {code:"LCJ",city:"Lodz",country:"Poland"},{code:"LDE",city:"Lourdes",country:"France"},
+  {code:"LEI",city:"Almeria",country:"Spain"},{code:"LIG",city:"Limoges",country:"France"},
+  {code:"LIS",city:"Lisbon",country:"Portugal"},{code:"LNZ",city:"Linz",country:"Austria"},
+  {code:"LPA",city:"Gran Canaria",country:"Spain"},{code:"LRH",city:"La Rochelle",country:"France"},
+  {code:"LUX",city:"Luxembourg",country:"Luxembourg"},{code:"MAD",city:"Madrid",country:"Spain"},
+  {code:"MAH",city:"Menorca",country:"Spain"},{code:"MLA",city:"Malta",country:"Malta"},
+  {code:"MMX",city:"Malmo",country:"Sweden"},{code:"MRS",city:"Marseille",country:"France"},
+  {code:"MXP",city:"Milan",country:"Italy"},{code:"NAP",city:"Naples",country:"Italy"},
+  {code:"NCE",city:"Nice",country:"France"},{code:"NOC",city:"Knock",country:"Ireland"},
+  {code:"NQY",city:"Newquay",country:"United Kingdom"},{code:"NTE",city:"Nantes",country:"France"},
+  {code:"NUE",city:"Nuremberg",country:"Germany"},{code:"OLB",city:"Olbia",country:"Italy"},
+  {code:"OPO",city:"Porto",country:"Portugal"},{code:"ORK",city:"Cork",country:"Ireland"},
+  {code:"OSI",city:"Osijek",country:"Croatia"},{code:"OSL",city:"Oslo",country:"Norway"},
+  {code:"OSR",city:"Ostrava",country:"Czech Republic"},{code:"OTP",city:"Bucharest",country:"Romania"},
+  {code:"PDV",city:"Plovdiv",country:"Bulgaria"},{code:"PEG",city:"Perugia",country:"Italy"},
+  {code:"PFO",city:"Paphos",country:"Cyprus"},{code:"PGF",city:"Perpignan",country:"France"},
+  {code:"PIS",city:"Poitiers",country:"France"},{code:"PLQ",city:"Palanga",country:"Lithuania"},
+  {code:"PMF",city:"Parma",country:"Italy"},{code:"PMI",city:"Palma",country:"Spain"},
+  {code:"PMO",city:"Palermo",country:"Italy"},{code:"POZ",city:"Poznan",country:"Poland"},
+  {code:"PRG",city:"Prague",country:"Czech Republic"},{code:"PSA",city:"Pisa",country:"Italy"},
+  {code:"PSR",city:"Pescara",country:"Italy"},{code:"PUY",city:"Pula",country:"Croatia"},
+  {code:"PVK",city:"Preveza",country:"Greece"},{code:"QSR",city:"Salerno",country:"Italy"},
+  {code:"RAK",city:"Marrakesh",country:"Morocco"},{code:"RBA",city:"Rabat",country:"Morocco"},
+  {code:"RDZ",city:"Rodez",country:"France"},{code:"REG",city:"Reggio Calabria",country:"Italy"},
+  {code:"REU",city:"Reus",country:"Spain"},{code:"RHO",city:"Rhodes",country:"Greece"},
+  {code:"RIX",city:"Riga",country:"Latvia"},{code:"RJK",city:"Rijeka",country:"Croatia"},
+  {code:"RMI",city:"Rimini",country:"Italy"},{code:"RMU",city:"Murcia",country:"Spain"},
+  {code:"RVN",city:"Rovaniemi",country:"Finland"},{code:"RZE",city:"Rzeszow",country:"Poland"},
+  {code:"SCQ",city:"Santiago",country:"Spain"},{code:"SDR",city:"Santander",country:"Spain"},
+  {code:"SJJ",city:"Sarajevo",country:"Bosnia & Herzegovina"},{code:"SKG",city:"Thessaloniki",country:"Greece"},
+  {code:"SNN",city:"Shannon",country:"Ireland"},{code:"SOF",city:"Sofia",country:"Bulgaria"},
+  {code:"SUF",city:"Lamezia",country:"Italy"},{code:"SVQ",city:"Seville",country:"Spain"},
+  {code:"SZG",city:"Salzburg",country:"Austria"},{code:"SZY",city:"Olsztyn",country:"Poland"},
+  {code:"SZZ",city:"Szczecin",country:"Poland"},{code:"TFS",city:"Tenerife",country:"Spain"},
+  {code:"TGD",city:"Podgorica",country:"Montenegro"},{code:"TIA",city:"Tirana",country:"Albania"},
+  {code:"TLL",city:"Tallinn",country:"Estonia"},{code:"TLS",city:"Toulouse",country:"France"},
+  {code:"TNG",city:"Tangier",country:"Morocco"},{code:"TPS",city:"Trapani",country:"Italy"},
+  {code:"TRF",city:"Sandefjord",country:"Norway"},{code:"TRN",city:"Turin",country:"Italy"},
+  {code:"TRS",city:"Trieste",country:"Italy"},{code:"TUF",city:"Tours",country:"France"},
+  {code:"VCE",city:"Venice",country:"Italy"},{code:"VIE",city:"Vienna",country:"Austria"},
+  {code:"VLC",city:"Valencia",country:"Spain"},{code:"VNO",city:"Vilnius",country:"Lithuania"},
+  {code:"VRN",city:"Verona",country:"Italy"},{code:"VST",city:"Vasteras",country:"Sweden"},
+  {code:"WMI",city:"Warsaw",country:"Poland"},{code:"WRO",city:"Wroclaw",country:"Poland"},
+  {code:"ZAD",city:"Zadar",country:"Croatia"},{code:"ZAG",city:"Zagreb",country:"Croatia"},
+  {code:"ZAZ",city:"Zaragoza",country:"Spain"},{code:"ZTH",city:"Zakynthos",country:"Greece"}
+];
+
+const DESTINATIONS_DUB = [
+  {code:"ACE",city:"Lanzarote",country:"Spain"},{code:"AGA",city:"Agadir",country:"Morocco"},
+  {code:"AGP",city:"Malaga",country:"Spain"},{code:"AHO",city:"Alghero",country:"Italy"},
+  {code:"ALC",city:"Alicante",country:"Spain"},{code:"AMS",city:"Amsterdam",country:"Netherlands"},
+  {code:"ARN",city:"Stockholm",country:"Sweden"},{code:"ATH",city:"Athens",country:"Greece"},
+  {code:"BCN",city:"Barcelona",country:"Spain"},{code:"BDS",city:"Brindisi",country:"Italy"},
+  {code:"BER",city:"Berlin",country:"Germany"},{code:"BGY",city:"Bergamo",country:"Italy"},
+  {code:"BHX",city:"Birmingham",country:"United Kingdom"},{code:"BIQ",city:"Biarritz",country:"France"},
+  {code:"BJV",city:"Bodrum",country:"Turkey"},{code:"BLQ",city:"Bologna",country:"Italy"},
+  {code:"BOJ",city:"Burgas",country:"Bulgaria"},{code:"BRI",city:"Bari",country:"Italy"},
+  {code:"BRS",city:"Bristol",country:"United Kingdom"},{code:"BRU",city:"Brussels",country:"Belgium"},
+  {code:"BSL",city:"Basel",country:"Switzerland"},{code:"BTS",city:"Bratislava",country:"Slovakia"},
+  {code:"BUD",city:"Budapest",country:"Hungary"},{code:"BVA",city:"Paris",country:"France"},
+  {code:"BZG",city:"Bydgoszcz",country:"Poland"},{code:"CAG",city:"Cagliari",country:"Italy"},
+  {code:"CCF",city:"Carcassonne",country:"France"},{code:"CFU",city:"Corfu",country:"Greece"},
+  {code:"CGN",city:"Cologne",country:"Germany"},{code:"CHQ",city:"Chania",country:"Greece"},
+  {code:"CLJ",city:"Cluj",country:"Romania"},{code:"CPH",city:"Copenhagen",country:"Denmark"},
+  {code:"CRL",city:"Charleroi",country:"Belgium"},{code:"CWL",city:"Cardiff",country:"United Kingdom"},
+  {code:"DBV",city:"Dubrovnik",country:"Croatia"},{code:"DLM",city:"Dalaman",country:"Turkey"},
+  {code:"EDI",city:"Edinburgh",country:"United Kingdom"},{code:"EMA",city:"East Midlands",country:"United Kingdom"},
+  {code:"FAO",city:"Faro",country:"Portugal"},{code:"FCO",city:"Rome",country:"Italy"},
+  {code:"FMM",city:"Memmingen",country:"Germany"},{code:"FNC",city:"Funchal",country:"Portugal"},
+  {code:"FNI",city:"Nimes",country:"France"},{code:"FUE",city:"Fuerteventura",country:"Spain"},
+  {code:"GDN",city:"Gdansk",country:"Poland"},{code:"GLA",city:"Glasgow",country:"United Kingdom"},
+  {code:"GNB",city:"Grenoble",country:"France"},{code:"GRO",city:"Girona",country:"Spain"},
+  {code:"HAM",city:"Hamburg",country:"Germany"},{code:"IAS",city:"Iasi",country:"Romania"},
+  {code:"IBZ",city:"Ibiza",country:"Spain"},{code:"JTR",city:"Santorini",country:"Greece"},
+  {code:"KGS",city:"Kos",country:"Greece"},{code:"KIR",city:"Kerry",country:"Ireland"},
+  {code:"KRK",city:"Krakow",country:"Poland"},{code:"KSC",city:"Kosice",country:"Slovakia"},
+  {code:"KTW",city:"Katowice",country:"Poland"},{code:"KUN",city:"Kaunas",country:"Lithuania"},
+  {code:"LBA",city:"Leeds",country:"United Kingdom"},{code:"LCJ",city:"Lodz",country:"Poland"},
+  {code:"LDE",city:"Lourdes",country:"France"},{code:"LGW",city:"London",country:"United Kingdom"},
+  {code:"LIS",city:"Lisbon",country:"Portugal"},{code:"LPA",city:"Gran Canaria",country:"Spain"},
+  {code:"LPL",city:"Liverpool",country:"United Kingdom"},{code:"LRH",city:"La Rochelle",country:"France"},
+  {code:"LTN",city:"London",country:"United Kingdom"},{code:"LUX",city:"Luxembourg",country:"Luxembourg"},
+  {code:"LUZ",city:"Lublin",country:"Poland"},{code:"MAD",city:"Madrid",country:"Spain"},
+  {code:"MAH",city:"Menorca",country:"Spain"},{code:"MAN",city:"Manchester",country:"United Kingdom"},
+  {code:"MLA",city:"Malta",country:"Malta"},{code:"MRS",city:"Marseille",country:"France"},
+  {code:"MXP",city:"Milan",country:"Italy"},{code:"NAP",city:"Naples",country:"Italy"},
+  {code:"NCE",city:"Nice",country:"France"},{code:"NCL",city:"Newcastle",country:"United Kingdom"},
+  {code:"NQY",city:"Newquay",country:"United Kingdom"},{code:"NTE",city:"Nantes",country:"France"},
+  {code:"OLB",city:"Olbia",country:"Italy"},{code:"OPO",city:"Porto",country:"Portugal"},
+  {code:"OTP",city:"Bucharest",country:"Romania"},{code:"PFO",city:"Paphos",country:"Cyprus"},
+  {code:"PMI",city:"Palma",country:"Spain"},{code:"PMO",city:"Palermo",country:"Italy"},
+  {code:"POZ",city:"Poznan",country:"Poland"},{code:"PRG",city:"Prague",country:"Czech Republic"},
+  {code:"PSA",city:"Pisa",country:"Italy"},{code:"RAK",city:"Marrakesh",country:"Morocco"},
+  {code:"RBA",city:"Rabat",country:"Morocco"},{code:"REU",city:"Reus",country:"Spain"},
+  {code:"RHO",city:"Rhodes",country:"Greece"},{code:"RIX",city:"Riga",country:"Latvia"},
+  {code:"RMU",city:"Murcia",country:"Spain"},{code:"RVN",city:"Rovaniemi",country:"Finland"},
+  {code:"RZE",city:"Rzeszow",country:"Poland"},{code:"SCQ",city:"Santiago",country:"Spain"},
+  {code:"SDR",city:"Santander",country:"Spain"},{code:"SKG",city:"Thessaloniki",country:"Greece"},
+  {code:"SOF",city:"Sofia",country:"Bulgaria"},{code:"SPU",city:"Split",country:"Croatia"},
+  {code:"STN",city:"London",country:"United Kingdom"},{code:"SVQ",city:"Seville",country:"Spain"},
+  {code:"SZG",city:"Salzburg",country:"Austria"},{code:"SZZ",city:"Szczecin",country:"Poland"},
+  {code:"TFS",city:"Tenerife",country:"Spain"},{code:"TIA",city:"Tirana",country:"Albania"},
+  {code:"TLL",city:"Tallinn",country:"Estonia"},{code:"TLS",city:"Toulouse",country:"France"},
+  {code:"TRN",city:"Turin",country:"Italy"},{code:"TRS",city:"Trieste",country:"Italy"},
+  {code:"VCE",city:"Venice",country:"Italy"},{code:"VIE",city:"Vienna",country:"Austria"},
+  {code:"VLC",city:"Valencia",country:"Spain"},{code:"VNO",city:"Vilnius",country:"Lithuania"},
+  {code:"VRN",city:"Verona",country:"Italy"},{code:"WMI",city:"Warsaw",country:"Poland"},
+  {code:"WRO",city:"Wroclaw",country:"Poland"},{code:"ZAD",city:"Zadar",country:"Croatia"},
+  {code:"ZAG",city:"Zagreb",country:"Croatia"},{code:"ZTH",city:"Zakynthos",country:"Greece"}
+];
+
+const DESTINATIONS_BGY = [
+  {code:"ACE",city:"Lanzarote",country:"Spain"},{code:"AGA",city:"Agadir",country:"Morocco"},
+  {code:"AGP",city:"Malaga",country:"Spain"},{code:"AHO",city:"Alghero",country:"Italy"},
+  {code:"ALC",city:"Alicante",country:"Spain"},{code:"AMM",city:"Amman",country:"Jordan"},
+  {code:"ARN",city:"Stockholm",country:"Sweden"},{code:"ATH",city:"Athens",country:"Greece"},
+  {code:"BCN",city:"Barcelona",country:"Spain"},{code:"BDS",city:"Brindisi",country:"Italy"},
+  {code:"BEM",city:"Beni Mellal",country:"Morocco"},{code:"BER",city:"Berlin",country:"Germany"},
+  {code:"BFS",city:"Belfast",country:"United Kingdom"},{code:"BHX",city:"Birmingham",country:"United Kingdom"},
+  {code:"BIQ",city:"Biarritz",country:"France"},{code:"BRI",city:"Bari",country:"Italy"},
+  {code:"BRQ",city:"Brno",country:"Czech Republic"},{code:"BRS",city:"Bristol",country:"United Kingdom"},
+  {code:"BUD",city:"Budapest",country:"Hungary"},{code:"BVA",city:"Paris",country:"France"},
+  {code:"CAG",city:"Cagliari",country:"Italy"},{code:"CDT",city:"Castellon",country:"Spain"},
+  {code:"CFU",city:"Corfu",country:"Greece"},{code:"CGN",city:"Cologne",country:"Germany"},
+  {code:"CHQ",city:"Chania",country:"Greece"},{code:"CLJ",city:"Cluj",country:"Romania"},
+  {code:"CPH",city:"Copenhagen",country:"Denmark"},{code:"CRL",city:"Charleroi",country:"Belgium"},
+  {code:"CRV",city:"Crotone",country:"Italy"},{code:"CTA",city:"Catania",country:"Italy"},
+  {code:"DBV",city:"Dubrovnik",country:"Croatia"},{code:"DUB",city:"Dublin",country:"Ireland"},
+  {code:"EDI",city:"Edinburgh",country:"United Kingdom"},{code:"EFL",city:"Kefalonia",country:"Greece"},
+  {code:"EIN",city:"Eindhoven",country:"Netherlands"},{code:"EMA",city:"East Midlands",country:"United Kingdom"},
+  {code:"FAO",city:"Faro",country:"Portugal"},{code:"FEZ",city:"Fez",country:"Morocco"},
+  {code:"FUE",city:"Fuerteventura",country:"Spain"},{code:"GDN",city:"Gdansk",country:"Poland"},
+  {code:"HEL",city:"Helsinki",country:"Finland"},{code:"HER",city:"Heraklion",country:"Greece"},
+  {code:"IAS",city:"Iasi",country:"Romania"},{code:"IBZ",city:"Ibiza",country:"Spain"},
+  {code:"JSI",city:"Skiathos",country:"Greece"},{code:"JTR",city:"Santorini",country:"Greece"},
+  {code:"KGS",city:"Kos",country:"Greece"},{code:"KLX",city:"Kalamata",country:"Greece"},
+  {code:"KRK",city:"Krakow",country:"Poland"},{code:"KTW",city:"Katowice",country:"Poland"},
+  {code:"KUN",city:"Kaunas",country:"Lithuania"},{code:"LCJ",city:"Lodz",country:"Poland"},
+  {code:"LDE",city:"Lourdes",country:"France"},{code:"LIS",city:"Lisbon",country:"Portugal"},
+  {code:"LPA",city:"Gran Canaria",country:"Spain"},{code:"LPL",city:"Liverpool",country:"United Kingdom"},
+  {code:"LUX",city:"Luxembourg",country:"Luxembourg"},{code:"LUZ",city:"Lublin",country:"Poland"},
+  {code:"LXS",city:"Lemnos",country:"Greece"},{code:"MAD",city:"Madrid",country:"Spain"},
+  {code:"MAH",city:"Menorca",country:"Spain"},{code:"MAN",city:"Manchester",country:"United Kingdom"},
+  {code:"MLA",city:"Malta",country:"Malta"},{code:"MRS",city:"Marseille",country:"France"},
+  {code:"NAP",city:"Naples",country:"Italy"},{code:"NCL",city:"Newcastle",country:"United Kingdom"},
+  {code:"NOC",city:"Knock",country:"Ireland"},{code:"NRN",city:"Dusseldorf",country:"Germany"},
+  {code:"OLB",city:"Olbia",country:"Italy"},{code:"OPO",city:"Porto",country:"Portugal"},
+  {code:"ORK",city:"Cork",country:"Ireland"},{code:"OTP",city:"Bucharest",country:"Romania"},
+  {code:"PFO",city:"Paphos",country:"Cyprus"},{code:"PMI",city:"Palma",country:"Spain"},
+  {code:"PMO",city:"Palermo",country:"Italy"},{code:"POZ",city:"Poznan",country:"Poland"},
+  {code:"PRG",city:"Prague",country:"Czech Republic"},{code:"PSR",city:"Pescara",country:"Italy"},
+  {code:"PVK",city:"Preveza",country:"Greece"},{code:"QSR",city:"Salerno",country:"Italy"},
+  {code:"RAK",city:"Marrakesh",country:"Morocco"},{code:"RBA",city:"Rabat",country:"Morocco"},
+  {code:"REG",city:"Reggio Calabria",country:"Italy"},{code:"RHO",city:"Rhodes",country:"Greece"},
+  {code:"RIX",city:"Riga",country:"Latvia"},{code:"RVN",city:"Rovaniemi",country:"Finland"},
+  {code:"SJJ",city:"Sarajevo",country:"Bosnia & Herzegovina"},{code:"SKG",city:"Thessaloniki",country:"Greece"},
+  {code:"SOF",city:"Sofia",country:"Bulgaria"},{code:"STN",city:"London",country:"United Kingdom"},
+  {code:"SUF",city:"Lamezia",country:"Italy"},{code:"SVQ",city:"Seville",country:"Spain"},
+  {code:"TFS",city:"Tenerife",country:"Spain"},{code:"TIA",city:"Tirana",country:"Albania"},
+  {code:"TLS",city:"Toulouse",country:"France"},{code:"TNG",city:"Tangier",country:"Morocco"},
+  {code:"TPS",city:"Trapani",country:"Italy"},{code:"TRF",city:"Sandefjord",country:"Norway"},
+  {code:"VIE",city:"Vienna",country:"Austria"},{code:"VIT",city:"Vitoria-Gasteiz",country:"Spain"},
+  {code:"VLC",city:"Valencia",country:"Spain"},{code:"VNO",city:"Vilnius",country:"Lithuania"},
+  {code:"WMI",city:"Warsaw",country:"Poland"},{code:"WRO",city:"Wroclaw",country:"Poland"},
+  {code:"ZAD",city:"Zadar",country:"Croatia"},{code:"ZAG",city:"Zagreb",country:"Croatia"},
+  {code:"ZAZ",city:"Zaragoza",country:"Spain"},{code:"ZTH",city:"Zakynthos",country:"Greece"}
+];
+
+const DESTINATIONS_MAD = [
+  {code:"ACE",city:"Lanzarote",country:"Spain"},{code:"AGA",city:"Agadir",country:"Morocco"},
+  {code:"AHO",city:"Alghero",country:"Italy"},{code:"AMM",city:"Amman",country:"Jordan"},
+  {code:"BDS",city:"Brindisi",country:"Italy"},{code:"BER",city:"Berlin",country:"Germany"},
+  {code:"BGY",city:"Bergamo",country:"Italy"},{code:"BHX",city:"Birmingham",country:"United Kingdom"},
+  {code:"BLQ",city:"Bologna",country:"Italy"},{code:"BRI",city:"Bari",country:"Italy"},
+  {code:"BRS",city:"Bristol",country:"United Kingdom"},{code:"BRU",city:"Brussels",country:"Belgium"},
+  {code:"BUD",city:"Budapest",country:"Hungary"},{code:"BVA",city:"Paris",country:"France"},
+  {code:"CAG",city:"Cagliari",country:"Italy"},{code:"CPH",city:"Copenhagen",country:"Denmark"},
+  {code:"CRL",city:"Charleroi",country:"Belgium"},{code:"CTA",city:"Catania",country:"Italy"},
+  {code:"DUB",city:"Dublin",country:"Ireland"},{code:"EDI",city:"Edinburgh",country:"United Kingdom"},
+  {code:"EIN",city:"Eindhoven",country:"Netherlands"},{code:"ESU",city:"Essaouira",country:"Morocco"},
+  {code:"FAO",city:"Faro",country:"Portugal"},{code:"FCO",city:"Rome",country:"Italy"},
+  {code:"FEZ",city:"Fez",country:"Morocco"},{code:"FUE",city:"Fuerteventura",country:"Spain"},
+  {code:"GDN",city:"Gdansk",country:"Poland"},{code:"IBZ",city:"Ibiza",country:"Spain"},
+  {code:"KRK",city:"Krakow",country:"Poland"},{code:"KUN",city:"Kaunas",country:"Lithuania"},
+  {code:"LIS",city:"Lisbon",country:"Portugal"},{code:"LPA",city:"Gran Canaria",country:"Spain"},
+  {code:"LPL",city:"Liverpool",country:"United Kingdom"},{code:"LUX",city:"Luxembourg",country:"Luxembourg"},
+  {code:"MAH",city:"Menorca",country:"Spain"},{code:"MAN",city:"Manchester",country:"United Kingdom"},
+  {code:"MLA",city:"Malta",country:"Malta"},{code:"MRS",city:"Marseille",country:"France"},
+  {code:"MXP",city:"Milan",country:"Italy"},{code:"NAP",city:"Naples",country:"Italy"},
+  {code:"NDR",city:"Nador",country:"Morocco"},{code:"NRN",city:"Dusseldorf",country:"Germany"},
+  {code:"OPO",city:"Porto",country:"Portugal"},{code:"OTP",city:"Bucharest",country:"Romania"},
+  {code:"PMI",city:"Palma",country:"Spain"},{code:"PMO",city:"Palermo",country:"Italy"},
+  {code:"PRG",city:"Prague",country:"Czech Republic"},{code:"PSA",city:"Pisa",country:"Italy"},
+  {code:"RAK",city:"Marrakesh",country:"Morocco"},{code:"RBA",city:"Rabat",country:"Morocco"},
+  {code:"SNN",city:"Shannon",country:"Ireland"},{code:"SOF",city:"Sofia",country:"Bulgaria"},
+  {code:"STN",city:"London",country:"United Kingdom"},{code:"SUF",city:"Lamezia",country:"Italy"},
+  {code:"TNG",city:"Tangier",country:"Morocco"},{code:"TRN",city:"Turin",country:"Italy"},
+  {code:"TTU",city:"Tetouan",country:"Morocco"},{code:"VCE",city:"Venice",country:"Italy"},
+  {code:"VIE",city:"Vienna",country:"Austria"},{code:"VIL",city:"Dakhla",country:"Morocco"},
+  {code:"VRN",city:"Verona",country:"Italy"},{code:"WMI",city:"Warsaw",country:"Poland"},
+  {code:"WRO",city:"Wroclaw",country:"Poland"}
+];
+
+const DESTINATIONS_BCN = [
+  {code:"AGP",city:"Malaga",country:"Spain"},{code:"AHO",city:"Alghero",country:"Italy"},
+  {code:"ARN",city:"Stockholm",country:"Sweden"},{code:"BER",city:"Berlin",country:"Germany"},
+  {code:"BGY",city:"Bergamo",country:"Italy"},{code:"BHX",city:"Birmingham",country:"United Kingdom"},
+  {code:"BLQ",city:"Bologna",country:"Italy"},{code:"BRS",city:"Bristol",country:"United Kingdom"},
+  {code:"BRU",city:"Brussels",country:"Belgium"},{code:"BTS",city:"Bratislava",country:"Slovakia"},
+  {code:"BUD",city:"Budapest",country:"Hungary"},{code:"BVA",city:"Paris",country:"France"},
+  {code:"CFU",city:"Corfu",country:"Greece"},{code:"CGN",city:"Cologne",country:"Germany"},
+  {code:"CPH",city:"Copenhagen",country:"Denmark"},{code:"CRL",city:"Charleroi",country:"Belgium"},
+  {code:"DUB",city:"Dublin",country:"Ireland"},{code:"EDI",city:"Edinburgh",country:"United Kingdom"},
+  {code:"EMA",city:"East Midlands",country:"United Kingdom"},{code:"FAO",city:"Faro",country:"Portugal"},
+  {code:"FCO",city:"Rome",country:"Italy"},{code:"FEZ",city:"Fez",country:"Morocco"},
+  {code:"GDN",city:"Gdansk",country:"Poland"},{code:"HHN",city:"Frankfurt",country:"Germany"},
+  {code:"IBZ",city:"Ibiza",country:"Spain"},{code:"KRK",city:"Krakow",country:"Poland"},
+  {code:"LIS",city:"Lisbon",country:"Portugal"},{code:"LPL",city:"Liverpool",country:"United Kingdom"},
+  {code:"LTN",city:"London",country:"United Kingdom"},{code:"LUX",city:"Luxembourg",country:"Luxembourg"},
+  {code:"MAH",city:"Menorca",country:"Spain"},{code:"MAN",city:"Manchester",country:"United Kingdom"},
+  {code:"MLA",city:"Malta",country:"Malta"},{code:"MXP",city:"Milan",country:"Italy"},
+  {code:"NAP",city:"Naples",country:"Italy"},{code:"NCL",city:"Newcastle",country:"United Kingdom"},
+  {code:"NDR",city:"Nador",country:"Morocco"},{code:"OPO",city:"Porto",country:"Portugal"},
+  {code:"ORK",city:"Cork",country:"Ireland"},{code:"OUD",city:"Oujda",country:"Morocco"},
+  {code:"OZZ",city:"Ouarzazate",country:"Morocco"},{code:"PEG",city:"Perugia",country:"Italy"},
+  {code:"PIK",city:"Glasgow",country:"United Kingdom"},{code:"PMI",city:"Palma",country:"Spain"},
+  {code:"PMO",city:"Palermo",country:"Italy"},{code:"PRG",city:"Prague",country:"Czech Republic"},
+  {code:"RAK",city:"Marrakesh",country:"Morocco"},{code:"RBA",city:"Rabat",country:"Morocco"},
+  {code:"REG",city:"Reggio Calabria",country:"Italy"},{code:"RIX",city:"Riga",country:"Latvia"},
+  {code:"SCQ",city:"Santiago",country:"Spain"},{code:"SOF",city:"Sofia",country:"Bulgaria"},
+  {code:"STN",city:"London",country:"United Kingdom"},{code:"SVQ",city:"Seville",country:"Spain"},
+  {code:"TLL",city:"Tallinn",country:"Estonia"},{code:"TNG",city:"Tangier",country:"Morocco"},
+  {code:"TRN",city:"Turin",country:"Italy"},{code:"TRS",city:"Trieste",country:"Italy"},
+  {code:"VCE",city:"Venice",country:"Italy"},{code:"VIE",city:"Vienna",country:"Austria"},
+  {code:"VNO",city:"Vilnius",country:"Lithuania"},{code:"WMI",city:"Warsaw",country:"Poland"},
+  {code:"ZAD",city:"Zadar",country:"Croatia"}
+];
+
+const DESTINATIONS_AGP = [
+  {code:"AAR",city:"Aarhus",country:"Denmark"},{code:"ABZ",city:"Aberdeen",country:"United Kingdom"},
+  {code:"ACE",city:"Lanzarote",country:"Spain"},{code:"AMS",city:"Amsterdam",country:"Netherlands"},
+  {code:"ARN",city:"Stockholm",country:"Sweden"},{code:"BCN",city:"Barcelona",country:"Spain"},
+  {code:"BER",city:"Berlin",country:"Germany"},{code:"BFS",city:"Belfast",country:"United Kingdom"},
+  {code:"BGY",city:"Bergamo",country:"Italy"},{code:"BHX",city:"Birmingham",country:"United Kingdom"},
+  {code:"BLQ",city:"Bologna",country:"Italy"},{code:"BOH",city:"Bournemouth",country:"United Kingdom"},
+  {code:"BRE",city:"Bremen",country:"Germany"},{code:"BRI",city:"Bari",country:"Italy"},
+  {code:"BRQ",city:"Brno",country:"Czech Republic"},{code:"BRS",city:"Bristol",country:"United Kingdom"},
+  {code:"BRU",city:"Brussels",country:"Belgium"},{code:"BTS",city:"Bratislava",country:"Slovakia"},
+  {code:"BUD",city:"Budapest",country:"Hungary"},{code:"BVA",city:"Paris",country:"France"},
+  {code:"CGN",city:"Cologne",country:"Germany"},{code:"CPH",city:"Copenhagen",country:"Denmark"},
+  {code:"CRL",city:"Charleroi",country:"Belgium"},{code:"CWL",city:"Cardiff",country:"United Kingdom"},
+  {code:"DUB",city:"Dublin",country:"Ireland"},{code:"EDI",city:"Edinburgh",country:"United Kingdom"},
+  {code:"EIN",city:"Eindhoven",country:"Netherlands"},{code:"EMA",city:"East Midlands",country:"United Kingdom"},
+  {code:"EXT",city:"Exeter",country:"United Kingdom"},{code:"FCO",city:"Rome",country:"Italy"},
+  {code:"FEZ",city:"Fez",country:"Morocco"},{code:"FKB",city:"Karlsruhe",country:"Germany"},
+  {code:"FMM",city:"Memmingen",country:"Germany"},{code:"FMO",city:"Munster",country:"Germany"},
+  {code:"GDN",city:"Gdansk",country:"Poland"},{code:"GLA",city:"Glasgow",country:"United Kingdom"},
+  {code:"GOT",city:"Gothenburg",country:"Sweden"},{code:"HAM",city:"Hamburg",country:"Germany"},
+  {code:"HHN",city:"Frankfurt",country:"Germany"},{code:"IBZ",city:"Ibiza",country:"Spain"},
+  {code:"KRK",city:"Krakow",country:"Poland"},{code:"KSC",city:"Kosice",country:"Slovakia"},
+  {code:"KTW",city:"Katowice",country:"Poland"},{code:"KUN",city:"Kaunas",country:"Lithuania"},
+  {code:"LBA",city:"Leeds",country:"United Kingdom"},{code:"LBC",city:"Lubeck",country:"Germany"},
+  {code:"LCJ",city:"Lodz",country:"Poland"},{code:"LIS",city:"Lisbon",country:"Portugal"},
+  {code:"LPL",city:"Liverpool",country:"United Kingdom"},{code:"LTN",city:"London",country:"United Kingdom"},
+  {code:"MAH",city:"Menorca",country:"Spain"},{code:"MAN",city:"Manchester",country:"United Kingdom"},
+  {code:"MME",city:"Teesside",country:"United Kingdom"},{code:"MRS",city:"Marseille",country:"France"},
+  {code:"MXP",city:"Milan",country:"Italy"},{code:"NAP",city:"Naples",country:"Italy"},
+  {code:"NCL",city:"Newcastle",country:"United Kingdom"},{code:"NOC",city:"Knock",country:"Ireland"},
+  {code:"NQY",city:"Newquay",country:"United Kingdom"},{code:"NRN",city:"Dusseldorf",country:"Germany"},
+  {code:"NUE",city:"Nuremberg",country:"Germany"},{code:"OPO",city:"Porto",country:"Portugal"},
+  {code:"ORK",city:"Cork",country:"Ireland"},{code:"OSR",city:"Ostrava",country:"Czech Republic"},
+  {code:"OTP",city:"Bucharest",country:"Romania"},{code:"PAD",city:"Paderborn",country:"Germany"},
+  {code:"PED",city:"Pardubice",country:"Czech Republic"},{code:"PIK",city:"Glasgow",country:"United Kingdom"},
+  {code:"PMI",city:"Palma",country:"Spain"},{code:"POZ",city:"Poznan",country:"Poland"},
+  {code:"PRG",city:"Prague",country:"Czech Republic"},{code:"PSA",city:"Pisa",country:"Italy"},
+  {code:"RAK",city:"Marrakesh",country:"Morocco"},{code:"RBA",city:"Rabat",country:"Morocco"},
+  {code:"RIX",city:"Riga",country:"Latvia"},{code:"SNN",city:"Shannon",country:"Ireland"},
+  {code:"SOF",city:"Sofia",country:"Bulgaria"},{code:"STN",city:"London",country:"United Kingdom"},
+  {code:"TFS",city:"Tenerife",country:"Spain"},{code:"TNG",city:"Tangier",country:"Morocco"},
+  {code:"TRF",city:"Sandefjord",country:"Norway"},{code:"TRN",city:"Turin",country:"Italy"},
+  {code:"TRS",city:"Trieste",country:"Italy"},{code:"TSF",city:"Venice",country:"Italy"},
+  {code:"TTU",city:"Tetouan",country:"Morocco"},{code:"VCE",city:"Venice",country:"Italy"},
+  {code:"VIE",city:"Vienna",country:"Austria"},{code:"VIT",city:"Vitoria-Gasteiz",country:"Spain"},
+  {code:"VLC",city:"Valencia",country:"Spain"},{code:"VST",city:"Vasteras",country:"Sweden"},
+  {code:"WAW",city:"Warsaw",country:"Poland"},{code:"WMI",city:"Warsaw",country:"Poland"},
+  {code:"WRO",city:"Wroclaw",country:"Poland"},{code:"ZAG",city:"Zagreb",country:"Croatia"}
+];
+
+const DESTINATIONS_CRL = [
+  {code:"ACE",city:"Lanzarote",country:"Spain"},{code:"AGA",city:"Agadir",country:"Morocco"},
+  {code:"AGP",city:"Malaga",country:"Spain"},{code:"AHO",city:"Alghero",country:"Italy"},
+  {code:"ALC",city:"Alicante",country:"Spain"},{code:"AMM",city:"Amman",country:"Jordan"},
+  {code:"AOI",city:"Ancona",country:"Italy"},{code:"ARN",city:"Stockholm",country:"Sweden"},
+  {code:"ATH",city:"Athens",country:"Greece"},{code:"BCN",city:"Barcelona",country:"Spain"},
+  {code:"BDS",city:"Brindisi",country:"Italy"},{code:"BGY",city:"Bergamo",country:"Italy"},
+  {code:"BIQ",city:"Biarritz",country:"France"},{code:"BLQ",city:"Bologna",country:"Italy"},
+  {code:"BNX",city:"Banja Luka",country:"Bosnia & Herzegovina"},{code:"BRI",city:"Bari",country:"Italy"},
+  {code:"BTS",city:"Bratislava",country:"Slovakia"},{code:"BUD",city:"Budapest",country:"Hungary"},
+  {code:"BZR",city:"Beziers",country:"France"},{code:"CAG",city:"Cagliari",country:"Italy"},
+  {code:"CCF",city:"Carcassonne",country:"France"},{code:"CDT",city:"Castellon",country:"Spain"},
+  {code:"CFU",city:"Corfu",country:"Greece"},{code:"CHQ",city:"Chania",country:"Greece"},
+  {code:"CIA",city:"Rome",country:"Italy"},{code:"CLJ",city:"Cluj",country:"Romania"},
+  {code:"CTA",city:"Catania",country:"Italy"},{code:"DBV",city:"Dubrovnik",country:"Croatia"},
+  {code:"DUB",city:"Dublin",country:"Ireland"},{code:"EDI",city:"Edinburgh",country:"United Kingdom"},
+  {code:"ESU",city:"Essaouira",country:"Morocco"},{code:"FAO",city:"Faro",country:"Portugal"},
+  {code:"FCO",city:"Rome",country:"Italy"},{code:"FEZ",city:"Fez",country:"Morocco"},
+  {code:"FNC",city:"Funchal",country:"Portugal"},{code:"FNI",city:"Nimes",country:"France"},
+  {code:"FSC",city:"Figari",country:"France"},{code:"FUE",city:"Fuerteventura",country:"Spain"},
+  {code:"GOA",city:"Genoa",country:"Italy"},{code:"GRO",city:"Girona",country:"Spain"},
+  {code:"HEL",city:"Helsinki",country:"Finland"},{code:"HER",city:"Heraklion",country:"Greece"},
+  {code:"IAS",city:"Iasi",country:"Romania"},{code:"IBZ",city:"Ibiza",country:"Spain"},
+  {code:"KRK",city:"Krakow",country:"Poland"},{code:"KTW",city:"Katowice",country:"Poland"},
+  {code:"KUN",city:"Kaunas",country:"Lithuania"},{code:"LCJ",city:"Lodz",country:"Poland"},
+  {code:"LDE",city:"Lourdes",country:"France"},{code:"LEI",city:"Almeria",country:"Spain"},
+  {code:"LIS",city:"Lisbon",country:"Portugal"},{code:"LPA",city:"Gran Canaria",country:"Spain"},
+  {code:"LRH",city:"La Rochelle",country:"France"},{code:"MAD",city:"Madrid",country:"Spain"},
+  {code:"MAH",city:"Menorca",country:"Spain"},{code:"MAN",city:"Manchester",country:"United Kingdom"},
+  {code:"MLA",city:"Malta",country:"Malta"},{code:"MRS",city:"Marseille",country:"France"},
+  {code:"NAP",city:"Naples",country:"Italy"},{code:"NCL",city:"Newcastle",country:"United Kingdom"},
+  {code:"NDR",city:"Nador",country:"Morocco"},{code:"OLB",city:"Olbia",country:"Italy"},
+  {code:"OPO",city:"Porto",country:"Portugal"},{code:"ORK",city:"Cork",country:"Ireland"},
+  {code:"OTP",city:"Bucharest",country:"Romania"},{code:"OUD",city:"Oujda",country:"Morocco"},
+  {code:"PEG",city:"Perugia",country:"Italy"},{code:"PFO",city:"Paphos",country:"Cyprus"},
+  {code:"PGF",city:"Perpignan",country:"France"},{code:"PMI",city:"Palma",country:"Spain"},
+  {code:"PMO",city:"Palermo",country:"Italy"},{code:"POZ",city:"Poznan",country:"Poland"},
+  {code:"PRG",city:"Prague",country:"Czech Republic"},{code:"PSA",city:"Pisa",country:"Italy"},
+  {code:"PSR",city:"Pescara",country:"Italy"},{code:"PUY",city:"Pula",country:"Croatia"},
+  {code:"QSR",city:"Salerno",country:"Italy"},{code:"RAK",city:"Marrakesh",country:"Morocco"},
+  {code:"RBA",city:"Rabat",country:"Morocco"},{code:"RDZ",city:"Rodez",country:"France"},
+  {code:"REG",city:"Reggio Calabria",country:"Italy"},{code:"REU",city:"Reus",country:"Spain"},
+  {code:"RHO",city:"Rhodes",country:"Greece"},{code:"RIX",city:"Riga",country:"Latvia"},
+  {code:"RJK",city:"Rijeka",country:"Croatia"},{code:"RVN",city:"Rovaniemi",country:"Finland"},
+  {code:"SCQ",city:"Santiago",country:"Spain"},{code:"SDR",city:"Santander",country:"Spain"},
+  {code:"SJJ",city:"Sarajevo",country:"Bosnia & Herzegovina"},{code:"SKG",city:"Thessaloniki",country:"Greece"},
+  {code:"SOF",city:"Sofia",country:"Bulgaria"},{code:"SUF",city:"Lamezia",country:"Italy"},
+  {code:"SVQ",city:"Seville",country:"Spain"},{code:"TFS",city:"Tenerife",country:"Spain"},
+  {code:"TGD",city:"Podgorica",country:"Montenegro"},{code:"TIA",city:"Tirana",country:"Albania"},
+  {code:"TLS",city:"Toulouse",country:"France"},{code:"TNG",city:"Tangier",country:"Morocco"},
+  {code:"TPS",city:"Trapani",country:"Italy"},{code:"TRN",city:"Turin",country:"Italy"},
+  {code:"TRS",city:"Trieste",country:"Italy"},{code:"TSF",city:"Venice",country:"Italy"},
+  {code:"TTU",city:"Tetouan",country:"Morocco"},{code:"VIE",city:"Vienna",country:"Austria"},
+  {code:"VIT",city:"Vitoria-Gasteiz",country:"Spain"},{code:"VLC",city:"Valencia",country:"Spain"},
+  {code:"VOL",city:"Volos",country:"Greece"},{code:"VRN",city:"Verona",country:"Italy"},
+  {code:"WAW",city:"Warsaw",country:"Poland"},{code:"WMI",city:"Warsaw",country:"Poland"},
+  {code:"WRO",city:"Wroclaw",country:"Poland"},{code:"ZAD",city:"Zadar",country:"Croatia"},
+  {code:"ZAG",city:"Zagreb",country:"Croatia"},{code:"ZAZ",city:"Zaragoza",country:"Spain"}
+];
+
+const DESTINATIONS_ALC = [
+  {code:"ABZ",city:"Aberdeen",country:"United Kingdom"},{code:"ACE",city:"Lanzarote",country:"Spain"},
+  {code:"ARN",city:"Stockholm",country:"Sweden"},{code:"BER",city:"Berlin",country:"Germany"},
+  {code:"BFS",city:"Belfast",country:"United Kingdom"},{code:"BGY",city:"Bergamo",country:"Italy"},
+  {code:"BHX",city:"Birmingham",country:"United Kingdom"},{code:"BLQ",city:"Bologna",country:"Italy"},
+  {code:"BOH",city:"Bournemouth",country:"United Kingdom"},{code:"BRE",city:"Bremen",country:"Germany"},
+  {code:"BRI",city:"Bari",country:"Italy"},{code:"BRS",city:"Bristol",country:"United Kingdom"},
+  {code:"BTS",city:"Bratislava",country:"Slovakia"},{code:"BUD",city:"Budapest",country:"Hungary"},
+  {code:"BVA",city:"Paris",country:"France"},{code:"BZG",city:"Bydgoszcz",country:"Poland"},
+  {code:"CGN",city:"Cologne",country:"Germany"},{code:"CPH",city:"Copenhagen",country:"Denmark"},
+  {code:"CRL",city:"Charleroi",country:"Belgium"},{code:"CTA",city:"Catania",country:"Italy"},
+  {code:"CWL",city:"Cardiff",country:"United Kingdom"},{code:"DUB",city:"Dublin",country:"Ireland"},
+  {code:"EDI",city:"Edinburgh",country:"United Kingdom"},{code:"EIN",city:"Eindhoven",country:"Netherlands"},
+  {code:"EMA",city:"East Midlands",country:"United Kingdom"},{code:"EXT",city:"Exeter",country:"United Kingdom"},
+  {code:"FCO",city:"Rome",country:"Italy"},{code:"FDH",city:"Friedrichshafen",country:"Germany"},
+  {code:"FEZ",city:"Fez",country:"Morocco"},{code:"FKB",city:"Karlsruhe",country:"Germany"},
+  {code:"FMM",city:"Memmingen",country:"Germany"},{code:"FMO",city:"Munster",country:"Germany"},
+  {code:"GDN",city:"Gdansk",country:"Poland"},{code:"GLA",city:"Glasgow",country:"United Kingdom"},
+  {code:"GOT",city:"Gothenburg",country:"Sweden"},{code:"HAM",city:"Hamburg",country:"Germany"},
+  {code:"HEL",city:"Helsinki",country:"Finland"},{code:"HHN",city:"Frankfurt",country:"Germany"},
+  {code:"IBZ",city:"Ibiza",country:"Spain"},{code:"KIR",city:"Kerry",country:"Ireland"},
+  {code:"KRK",city:"Krakow",country:"Poland"},{code:"KTW",city:"Katowice",country:"Poland"},
+  {code:"KUN",city:"Kaunas",country:"Lithuania"},{code:"LBA",city:"Leeds",country:"United Kingdom"},
+  {code:"LCJ",city:"Lodz",country:"Poland"},{code:"LGW",city:"London",country:"United Kingdom"},
+  {code:"LIS",city:"Lisbon",country:"Portugal"},{code:"LNZ",city:"Linz",country:"Austria"},
+  {code:"LPL",city:"Liverpool",country:"United Kingdom"},{code:"LTN",city:"London",country:"United Kingdom"},
+  {code:"MAH",city:"Menorca",country:"Spain"},{code:"MAN",city:"Manchester",country:"United Kingdom"},
+  {code:"MME",city:"Teesside",country:"United Kingdom"},{code:"MRS",city:"Marseille",country:"France"},
+  {code:"MXP",city:"Milan",country:"Italy"},{code:"NCL",city:"Newcastle",country:"United Kingdom"},
+  {code:"NOC",city:"Knock",country:"Ireland"},{code:"NQY",city:"Newquay",country:"United Kingdom"},
+  {code:"NRN",city:"Dusseldorf",country:"Germany"},{code:"NUE",city:"Nuremberg",country:"Germany"},
+  {code:"NWI",city:"Norwich",country:"United Kingdom"},{code:"OPO",city:"Porto",country:"Portugal"},
+  {code:"ORK",city:"Cork",country:"Ireland"},{code:"PAD",city:"Paderborn",country:"Germany"},
+  {code:"PED",city:"Pardubice",country:"Czech Republic"},{code:"PIK",city:"Glasgow",country:"United Kingdom"},
+  {code:"PMI",city:"Palma",country:"Spain"},{code:"POZ",city:"Poznan",country:"Poland"},
+  {code:"RAK",city:"Marrakesh",country:"Morocco"},{code:"RZE",city:"Rzeszow",country:"Poland"},
+  {code:"SCN",city:"Saarbrucken",country:"Germany"},{code:"SCQ",city:"Santiago",country:"Spain"},
+  {code:"SNN",city:"Shannon",country:"Ireland"},{code:"SOF",city:"Sofia",country:"Bulgaria"},
+  {code:"STN",city:"London",country:"United Kingdom"},{code:"SVQ",city:"Seville",country:"Spain"},
+  {code:"SZG",city:"Salzburg",country:"Austria"},{code:"TLS",city:"Toulouse",country:"France"},
+  {code:"TRF",city:"Sandefjord",country:"Norway"},{code:"TRN",city:"Turin",country:"Italy"},
+  {code:"TSF",city:"Venice",country:"Italy"},{code:"TTU",city:"Tetouan",country:"Morocco"},
+  {code:"VCE",city:"Venice",country:"Italy"},{code:"VIE",city:"Vienna",country:"Austria"},
+  {code:"VIT",city:"Vitoria-Gasteiz",country:"Spain"},{code:"VST",city:"Vasteras",country:"Sweden"},
+  {code:"VXO",city:"Vaxjo",country:"Sweden"},{code:"WAW",city:"Warsaw",country:"Poland"},
+  {code:"WMI",city:"Warsaw",country:"Poland"},{code:"WRO",city:"Wroclaw",country:"Poland"},
+  {code:"ZAG",city:"Zagreb",country:"Croatia"}
+];
+
+/* build master airport list AFTER all DESTINATIONS_* are defined */
+const MASTER_AIRPORTS = buildMasterAirportList();
+const MASTER_AIRPORT_NAMES = Object.fromEntries(MASTER_AIRPORTS.map(d => [d.code, d.city]));
+
+/* map origin code -> its known destination list (for non multi-dest mode) */
+const ORIGIN_DEST_MAP = {
+  SKG: DESTINATIONS_SKG, ATH: DESTINATIONS_ATH, CHQ: DESTINATIONS_CHQ, RHO: DESTINATIONS_RHO,
+  BER: DESTINATIONS_BER, SOF: DESTINATIONS_SOF, STN: DESTINATIONS_STN, DUB: DESTINATIONS_DUB,
+  BGY: DESTINATIONS_BGY, MAD: DESTINATIONS_MAD, BCN: DESTINATIONS_BCN, AGP: DESTINATIONS_AGP,
+  CRL: DESTINATIONS_CRL, ALC: DESTINATIONS_ALC
+};
+
+function getOriginDirectCodes() {
+  const list = ORIGIN_DEST_MAP[currentOrigin];
+  return new Set(list ? list.map(d => d.code) : []);
+}
+
+function getOriginDisplayName(code) {
+  return getGreekName(code, MASTER_AIRPORT_NAMES[code] || code);
+}
+
+function fmtDate(iso) { const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; }
+
+function formatDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function firstOfMonth(d) { return new Date(d.getFullYear(), d.getMonth(), 1); }
+
+function getMonthsInRange(from, to) {
+  const months = []; let m = firstOfMonth(from);
+  while (m <= to) { months.push(new Date(m)); m.setMonth(m.getMonth() + 1); }
+  return months;
+}
+
+function switchCity(code) {
+  /* SKG is the only origin; this function is kept for compatibility */
+}
+
+function daysBetween(a, b) { return Math.round((b - a) / (1000 * 60 * 60 * 24)); }
+
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+
+function connects(arr1, dep2, minMins = 60) {
+  if (!arr1 || !dep2) return true;
+  const [ah, am] = arr1.split(':').map(Number);
+  const [bh, bm] = dep2.split(':').map(Number);
+  return (bh * 60 + bm) >= (ah * 60 + am) + minMins;
+}
+
+function coversWeekend(out, inbound) {
+  let w = 0; const d = new Date(out);
+  while (d <= inbound) { const dw = d.getDay(); if (dw === 0 || dw === 6) w++; d.setDate(d.getDate() + 1); }
+  return w >= 2;
+}
+
+function getWaitHours(arr, dep) {
+  if (!arr || !dep) return null;
+  const [ah, am] = arr.split(':').map(Number);
+  const [dh, dm] = dep.split(':').map(Number);
+  let mins = (dh * 60 + dm) - (ah * 60 + am);
+  if (mins < 0) mins += 24 * 60;
+  return mins / 60;
+}
+
+function fmtWait(h) {
+  const v = Math.round(h * 10) / 10;
+  return String(v).replace('.', ',');
+}
+
+function getLegWait(route) {
+  if (!route || !route.arr1 || !route.dep2) return null;
+  const w = getWaitHours(route.arr1, route.dep2);
+  if (w === null) return null;
+  /* via1n = η 2η πτήση φεύγει την επόμενη μέρα, οπότε η αναμονή περιλαμβάνει +24h */
+  if (route.type === 'via1n') return w + 24;
+  return w;
+}
+
+function getRouteMaxWait(outRoute, retRoute) {
+  let maxWait = 0;
+  let found = false;
+  const ow = getLegWait(outRoute);
+  if (ow !== null) { found = true; if (ow > maxWait) maxWait = ow; }
+  const rw = getLegWait(retRoute);
+  if (rw !== null) { found = true; if (rw > maxWait) maxWait = rw; }
+  return found ? maxWait : 0;
+}
+
+/* --- Proxy API with retry --- */
+
+async function fetchWithRetry(url, retries = 3) {
+  /* Direct fetch first: Ryanair API returns Access-Control-Allow-Origin:* when the browser sends an Origin header */
+  for (let attempt = 0; attempt <= 1; attempt++) {
+    const ctrl = new AbortController();
+    const timer = setTimeout(() => ctrl.abort(), 20000);
+    try {
+      const resp = await fetch(url, { headers: { 'Accept': 'application/json' }, signal: ctrl.signal });
+      clearTimeout(timer);
+      if (resp.ok) return await resp.json();
+    } catch {
+      clearTimeout(timer);
+    }
+  }
+  /* Fallback: CORS proxies */
+  const start = Math.floor(Math.random() * CORS_PROXIES.length);
+  for (let attempt = 0; attempt <= retries; attempt++) {
+    for (let pi = 0; pi < CORS_PROXIES.length; pi++) {
+      const proxy = CORS_PROXIES[(start + pi) % CORS_PROXIES.length];
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 20000);
+      try {
+        const resp = await fetch(`${proxy}${encodeURIComponent(url)}`, { headers: { 'Accept': 'application/json' }, signal: ctrl.signal });
+        if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+        clearTimeout(timer);
+        return await resp.json();
+      } catch {
+        clearTimeout(timer);
+        continue;
+      }
+    }
+    if (attempt < retries) await new Promise(r => setTimeout(r, 1500 * (attempt + 1)));
+  }
+  throw new Error('All proxies failed');
+}
+
+async function fetchFares(origin, dest, monthDate) {
+  const mKey = formatDate(monthDate);
+  const cKey = `${origin}|${dest}|${mKey}`;
+  const cached = fareCache[cKey];
+  if (cached && (Date.now() - cached.ts) < FARE_TTL_MS) return cached.data;
+  const url = `https://www.ryanair.com/api/farfnd/v4/oneWayFares/${origin}/${dest}/cheapestPerDay?outboundMonthOfDate=${mKey}&currency=${CURRENCY}`;
+  const data = await fetchWithRetry(url);
+  if (!data || !data.outbound) return [];
+  const fares = (data.outbound.fares || []).filter(f => f && f.price && f.price.value != null && !f.soldOut && !f.unavailable);
+  fareCache[cKey] = { ts: Date.now(), data: fares };
+  return fares;
+}
+
+/* --- UI helpers --- */
+
+function isOneWay() {
+  return document.querySelector('input[name="tripType"]:checked')?.value === 'oneway';
+}
+
+function onTripTypeChange() {
+  const ow = isOneWay();
+  const nf = document.getElementById('nightsFilter');
+  const wf = document.getElementById('weekendFilter');
+  if (nf) nf.style.opacity = ow ? '0.3' : '1';
+  if (wf) wf.style.opacity = ow ? '0.3' : '1';
+}
+
+function setCacheDot(cls, text) {
+  const dot = document.getElementById('cacheDot');
+  const tx = document.getElementById('cacheText');
+  if (dot) dot.className = `dot ${cls}`;
+  if (tx) tx.textContent = text;
+  const ps = document.getElementById('proxyStatus');
+  if (ps) ps.textContent = text;
+}
+
+function cancelSearch() {
+  searchCancelled = true;
+  const cb = document.getElementById('cancelBtn');
+  if (cb) { cb.disabled = true; cb.textContent = t('cancelled'); }
+  setCacheDot('loading', t('cancelled'));
+}
+
+function finishCancelled() {
+  isSearching = false;
+  const bbtn = document.getElementById('searchBtn');
+  if (bbtn) { bbtn.disabled = false; bbtn.textContent = t('search'); }
+  setCacheDot('stale', t('cancelled'));
+  const ccont = document.getElementById('resultsContent');
+  if (ccont) ccont.innerHTML = `<div class="empty-msg"><div class="big-icon">⏹</div><p>${t('cancelled')}</p></div>`;
+  const ri = document.getElementById('resultsInfo');
+  if (ri) ri.textContent = '';
+}
+
+function toggleFilters(force) {
+  const sec = document.getElementById('filtersSection');
+  if (!sec) return;
+  const collapsed = force !== undefined ? force : !sec.classList.contains('collapsed');
+  sec.classList.toggle('collapsed', collapsed);
+  const btn = document.getElementById('filterToggleBtn');
+  if (btn) {
+    const key = collapsed ? 'showFilters' : 'hideFilters';
+    btn.setAttribute('data-i18n', key);
+    btn.textContent = t(key);
+  }
+  try { localStorage.setItem('rfpFiltersCollapsed', collapsed ? '1' : '0'); } catch (e) {}
+}
+
+/* --- Destinations --- */
+
+function initOriginSelect() {
+  const sel = document.getElementById('originSelect');
+  if (!sel) return;
+  const byCountry = {};
+  for (const d of MASTER_AIRPORTS) {
+    const c = d.country || t('other');
+    if (!byCountry[c]) byCountry[c] = [];
+    byCountry[c].push(d);
+  }
+  const countries = Object.keys(byCountry).sort((a, b) => a.localeCompare(b));
+  let html = '';
+  for (const c of countries) {
+    html += `<optgroup label="${c}">`;
+    byCountry[c].sort((a, b) => a.city.localeCompare(b.city));
+    for (const d of byCountry[c]) {
+      const label = `${cityName(d.code, d.city)} (${d.code})`;
+      html += `<option value="${d.code}"${d.code === currentOrigin ? ' selected' : ''}>${label}</option>`;
+    }
+    html += '</optgroup>';
+  }
+  sel.innerHTML = html;
+}
+
+function onOriginChange() {
+  const sel = document.getElementById('originSelect');
+  currentOrigin = sel ? sel.value : currentOrigin;
+  selectedDestinations.clear();
+  if (document.getElementById('multiDestMode')?.checked) selectAllIntermediatesDefault();
+  else selectedIntermediates.clear();
+  mcActiveTab = 'direct';
+  loadDestinations();
+  updateDestCount();
+}
+
+function getDestList() {
+  if (document.getElementById('multiDestMode')?.checked) {
+    return MASTER_AIRPORTS;
+  }
+  return ORIGIN_DEST_MAP[currentOrigin] || MASTER_AIRPORTS;
+}
+
+function loadDestinations() {
+  allDestinations = getDestList();
+  if (!document.getElementById('multiDestMode')?.checked) {
+    allDestinations.sort((a, b) => a.city.localeCompare(b.city));
+  }
+  document.getElementById('destCount').textContent = `${allDestinations.length} προορισμοί`;
+  renderDestinations();
+}
+
+function renderDestinations() {
+  const grid = document.getElementById('destGrid');
+  const isMc = document.getElementById('multiDestMode').checked;
+  if (isMc && wheelOfFortuneMode) {
+    grid.innerHTML = `<div style="grid-column:1/-1;font-size:0.82rem;font-weight:700;color:#d32f2f;padding:16px 8px;text-align:center">${t('wheelOfFortuneGridMsg')}</div>`;
+    return;
+  }
+  if (isMc) {
+    const directCodes = getOriginDirectCodes();
+    const sorted = [...allDestinations].sort((a, b) => a.country.localeCompare(b.country) || a.city.localeCompare(b.city));
+
+    /* Single list of ALL airports — user picks one destination anywhere */
+    let html = `<div style="grid-column:1/-1;font-size:0.78rem;font-weight:700;color:var(--accent);margin-bottom:6px">${t('mcHeader')}</div>`;
+    let currentCountry = '';
+    for (const d of sorted) {
+      const label = `${cityName(d.code, d.city)} (${d.code})`;
+      if (d.country !== currentCountry) {
+        currentCountry = d.country;
+        html += `<div style="grid-column:1/-1;font-size:0.7rem;font-weight:700;color:var(--text2);padding:5px 2px 2px;letter-spacing:0.3px">${currentCountry}</div>`;
+      }
+      const direct = directCodes.has(d.code);
+      const spanStyle = direct ? ' style="color:#66bb6a;font-weight:700"' : '';
+      html += `<label class="dest-item"><input type="radio" name="mcDest" value="${d.code}" ${selectedDestinations.has(d.code) ? 'checked' : ''} onchange="selectSingleDest('${d.code}')"><span class="dest-name"${spanStyle}>${label}</span></label>`;
+    }
+
+    grid.innerHTML = html;
+  } else {
+    grid.innerHTML = allDestinations.map(d => {
+      const label = `${cityName(d.code, d.city)} (${d.code})`;
+      return `<label class="dest-item"><input type="checkbox" value="${d.code}" ${selectedDestinations.has(d.code) ? 'checked' : ''} onchange="toggleDest('${d.code}',this.checked)"><span class="dest-name">${label}</span></label>`;
+    }).join('');
+  }
+}
+
+function toggleDest(code, chk) { chk ? selectedDestinations.add(code) : selectedDestinations.delete(code); updateDestCount(); }
+
+function selectSingleDest(code) {
+  selectedDestinations.clear();
+  selectedDestinations.add(code);
+  updateDestCount();
+}
+
+function toggleIntermediate(code, chk) {
+  chk ? selectedIntermediates.add(code) : selectedIntermediates.delete(code);
+  updateDestCount();
+}
+
+function selectAllIntermediatesDefault() {
+  selectedIntermediates.clear();
+  const list = ORIGIN_DEST_MAP[currentOrigin] || MASTER_AIRPORTS;
+  list.forEach(d => { if (d.code !== currentOrigin) selectedIntermediates.add(d.code); });
+}
+
+function selectAllDestinations(sel) {
+  if (sel) allDestinations.forEach(d => selectedDestinations.add(d.code));
+  else selectedDestinations.clear();
+  renderDestinations();
+  updateDestCount();
+}
+
+function switchMcTab(tab) {
+  mcActiveTab = tab;
+  renderDestinations();
+  updateDestCount();
+}
+
+function onMultiDestToggle() {
+  const isMc = document.getElementById('multiDestMode').checked;
+  mcActiveTab = 'direct';
+  const wheelRow = document.getElementById('wheelOfFortuneRow');
+  if (isMc) {
+    if (selectedDestinations.size > 1) {
+      const first = [...selectedDestinations][0];
+      selectedDestinations.clear();
+      selectedDestinations.add(first);
+    }
+    selectAllIntermediatesDefault();
+    if (wheelRow) wheelRow.style.display = 'flex';
+  } else {
+    const valid = [...selectedDestinations].filter(c => getOriginDirectCodes().has(c));
+    selectedDestinations.clear();
+    for (const c of valid) selectedDestinations.add(c);
+    selectedIntermediates.clear();
+    if (wheelRow) wheelRow.style.display = 'none';
+    const wfCk = document.getElementById('wheelOfFortune');
+    if (wfCk) { wfCk.checked = false; wheelOfFortuneMode = false; wheelFilterDest = 'ALL'; wheelFilterNights = 'ALL'; wheelFilterWait = 'ALL'; }
+  }
+  loadDestinations();
+  updateDestCount();
+}
+
+function onWheelOfFortuneToggle() {
+  wheelOfFortuneMode = document.getElementById('wheelOfFortune').checked;
+  wheelFilterDest = 'ALL';
+  wheelFilterNights = 'ALL';
+  updateDestCount();
+}
+
+function updateDestCount() {
+  const isMc = document.getElementById('multiDestMode').checked;
+  const countEl = document.getElementById('destCount');
+  const actionsEl = document.getElementById('destActions');
+  if (isMc) {
+    if (wheelOfFortuneMode) {
+      countEl.textContent = t('wheelOfFortuneActive');
+      if (actionsEl) actionsEl.style.display = 'none';
+    } else {
+      const sel = [...selectedDestinations][0];
+      countEl.textContent = selectedDestinations.size > 0
+        ? t('selectedOne', { code: `${sel} (${cityName(sel, MASTER_AIRPORT_NAMES[sel] || sel)})` })
+        : t('pickOne');
+      if (actionsEl) actionsEl.style.display = 'none';
+    }
+  } else {
+    countEl.textContent = t('selectedCount', { n: selectedDestinations.size, m: allDestinations.length });
+    if (actionsEl) actionsEl.style.display = '';
+  }
+}
+
+/* --- Multi-Destination Search (single destination, cheapest via intermediate) --- */
+
+async function searchMultiDestination() {
+  try {
+  if (isSearching) return;
+
+  const dateFrom = document.getElementById('dateFrom').value;
+  const dateTo = document.getElementById('dateTo').value;
+  let minN = Math.max(1, Math.min(30, parseInt(document.getElementById('minNights').value) || 2));
+  let maxN = Math.max(minN, Math.min(30, parseInt(document.getElementById('maxNights').value) || 5));
+  const wk = document.getElementById('weekendOnly').checked;
+
+  if (!dateFrom || !dateTo) return alert(t('pickDates'));
+  if (!wheelOfFortuneMode && selectedDestinations.size === 0) return alert(t('pickDest'));
+
+  const dFrom = new Date(dateFrom + 'T00:00:00');
+  const dTo = new Date(dateTo + 'T00:00:00');
+  if (dFrom >= dTo) return alert(t('dateOrder'));
+
+  const origin = currentOrigin;
+  const destList = wheelOfFortuneMode
+    ? MASTER_AIRPORTS.filter(a => a.code !== origin).map(a => a.code)
+    : [...selectedDestinations];
+
+  wheelFilterDest = 'ALL';
+  wheelFilterNights = 'ALL';
+  wheelFilterWait = 'ALL';
+  searchCancelled = false;
+
+  isSearching = true;
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true;
+  btn.textContent = t('searching');
+
+  setCacheDot('loading', t('fetchingRoutes'));
+  const content = document.getElementById('resultsContent');
+  content.innerHTML = `<div class="loading"><div class="spinner"></div><div class="progress-text" id="progText">${t('fetchingAll')}</div><div class="progress-bar"><div class="progress-bar-fill" id="progBar" style="width:0%"></div></div><div style="margin-top:14px"><button class="btn btn-secondary" id="cancelBtn" onclick="cancelSearch()" style="padding:8px 20px;font-size:0.8rem">${t('cancel')}</button></div><div class="skel-wrap"><div class="skel skel-line"></div><div class="skel skel-card"></div><div class="skel skel-card"></div></div></div>`;
+  document.getElementById('resultsInfo').textContent = '';
+
+  const months = getMonthsInRange(dFrom, dTo);
+
+  /* ---- PHASE 1: fetch all origin→I and I→origin to discover viable intermediates ---- */
+  const allFares = {};
+  let viableOutbound = new Set();
+  let viableReturn = new Set();
+  let phaseDone = 0;
+
+  function updateProg(pct, msg) {
+    const pt = document.getElementById('progText');
+    const pb = document.getElementById('progBar');
+    if (pt) pt.textContent = msg || `${t('fetching')} ${Math.round(pct)}%`;
+    if (pb) pb.style.width = Math.min(100, pct) + '%';
+  }
+
+  async function ensureFares(from, to) {
+    if (!allFares[from]) allFares[from] = {};
+    if (allFares[from][to]) return allFares[from][to];
+    const map = {};
+    allFares[from][to] = map;
+    for (const m of months) {
+      try {
+        const fares = await fetchFares(from, to, m);
+        for (const f of fares) {
+          const dt = new Date(f.day + 'T00:00:00');
+          if (dt >= dFrom && dt <= dTo) {
+            map[f.day] = {
+              price: f.price.value,
+              dep: f.departureDate ? f.departureDate.substring(11,16) : null,
+              arr: f.arrivalDate ? f.arrivalDate.substring(11,16) : null
+            };
+          }
+        }
+      } catch (e) {}
+    }
+    return map;
+  }
+
+  /* pool excludes origin and all selected destinations */
+  let pool = MASTER_AIRPORTS.filter(a => a.code !== origin && (wheelOfFortuneMode || !destList.includes(a.code)));
+  if (!wheelOfFortuneMode && selectedIntermediates.size > 0) {
+    pool = pool.filter(a => selectedIntermediates.has(a.code));
+  }
+  const poolSize = pool.length;
+  const CONCURRENCY = 12;
+  const ow = isOneWay();
+
+  /* Phase 1: discover viable intermediates */
+  async function discoverIntermediates(airport) {
+    const code = airport.code;
+    const outMap = await ensureFares(origin, code);
+    if (Object.keys(outMap).length > 0) viableOutbound.add(code);
+    if (!ow) {
+      const retMap = await ensureFares(code, origin);
+      if (Object.keys(retMap).length > 0) viableReturn.add(code);
+    }
+    phaseDone++;
+    const pct = (phaseDone / poolSize) * 40;
+    updateProg(pct, `${t('scanning')}: ${phaseDone}/${poolSize}`);
+  }
+
+  for (let i = 0; i < pool.length; i += CONCURRENCY) {
+    if (searchCancelled) break;
+    const batch = pool.slice(i, i + CONCURRENCY);
+    await Promise.allSettled(batch.map(discoverIntermediates));
+  }
+  if (searchCancelled) return finishCancelled();
+
+  /* ---- Per-destination: Phases 2 + 3 ---- */
+  const allResults = [];
+  const totalDests = destList.length;
+
+  for (let di = 0; di < totalDests; di++) {
+    if (searchCancelled) return finishCancelled();
+    const destCode = destList[di];
+    const destInfo = allDestinations.find(d => d.code === destCode);
+    const destName = destInfo ? cityName(destCode, destInfo.city) : destCode;
+
+    const outCandidates = [...viableOutbound].filter(c => c !== destCode);
+    const retCandidates = ow ? [] : [...viableReturn].filter(c => c !== destCode);
+
+    /* Phase 2: fetch I→Dest and Dest→I */
+    const phase2Base = 40 + (di / totalDests) * 50;
+    function phase2Pct(n, total) {
+      updateProg(phase2Base + (n / total) * (50 / totalDests), `[${di+1}/${totalDests}] ${destName}: ${t('connecting')} ${n}/${total}`);
+    }
+    let ph2Done = 0;
+    const totalPh2 = outCandidates.length + retCandidates.length;
+    if (totalPh2 === 0) { updateProg(phase2Base + 50 / totalDests, `[${di+1}/${totalDests}] ${destName}`); }
+    const batchOut = outCandidates.map(c => async () => { await ensureFares(c, destCode); ph2Done++; phase2Pct(ph2Done, totalPh2); });
+    const batchRet = retCandidates.map(c => async () => { await ensureFares(destCode, c); ph2Done++; phase2Pct(ph2Done, totalPh2); });
+    const allTasks = [...batchOut, ...batchRet];
+    for (let i = 0; i < allTasks.length; i += CONCURRENCY) {
+      if (searchCancelled) return finishCancelled();
+      await Promise.allSettled(allTasks.slice(i, i + CONCURRENCY).map(f => f()));
+    }
+    if (searchCancelled) return finishCancelled();
+
+    /* Fetch direct fares for this destination */
+    await ensureFares(origin, destCode);
+    if (!ow) await ensureFares(destCode, origin);
+
+    /* ---- PHASE 3: compute cheapest routes ---- */
+    const directOutFares = allFares[origin]?.[destCode] || {};
+    const directRetFares = allFares[destCode]?.[origin] || {};
+
+    for (let d = new Date(dFrom); d <= dTo; d.setDate(d.getDate() + 1)) {
+      if (searchCancelled) return finishCancelled();
+      const ods = formatDate(d);
+      const odNext = formatDate(addDays(d, 1));
+      let bestOutCost = Infinity, bestOutRoute = null;
+
+      const directOut = directOutFares[ods];
+      if (directOut && !wheelOfFortuneMode) {
+        bestOutCost = directOut.price;
+        bestOutRoute = { type: 'direct', intCode: null, intCity: null, arrDate: ods, dep: directOut.dep, arr: directOut.arr, price: directOut.price, legs: 1 };
+      }
+
+      for (const ic of outCandidates) {
+        const leg1 = allFares[origin]?.[ic]?.[ods];
+        if (!leg1) continue;
+        const leg2 = allFares[ic]?.[destCode]?.[ods];
+        if (!leg2 || !connects(leg1.arr, leg2.dep)) continue;
+        const total = leg1.price + leg2.price;
+        if (total < bestOutCost) {
+          bestOutCost = total;
+          const iCity = getGreekName(ic, MASTER_AIRPORT_NAMES[ic] || ic);
+          bestOutRoute = { type: 'via', intCode: ic, intCity: iCity, arrDate: ods, leg1Price: leg1.price, leg2Price: leg2.price, dep1: leg1.dep, arr1: leg1.arr, dep2: leg2.dep, arr2: leg2.arr, price: total, legs: 2 };
+        }
+      }
+
+      if (odNext <= formatDate(addDays(dTo, 1))) {
+        for (const ic of outCandidates) {
+          const leg1 = allFares[origin]?.[ic]?.[ods];
+          if (!leg1) continue;
+          const leg2 = allFares[ic]?.[destCode]?.[odNext];
+          if (!leg2) continue;
+          const total = leg1.price + leg2.price;
+          if (total < bestOutCost) {
+            bestOutCost = total;
+            const iCity = getGreekName(ic, MASTER_AIRPORT_NAMES[ic] || ic);
+            bestOutRoute = { type: 'via1n', intCode: ic, intCity: iCity, arrDate: odNext, leg1Price: leg1.price, leg2Price: leg2.price, dep1: leg1.dep, arr1: leg1.arr, dep2: leg2.dep, arr2: leg2.arr, price: total, legs: 2 };
+          }
+        }
+      }
+
+      if (!bestOutRoute) continue;
+
+      if (ow) {
+        allResults.push({
+          destCode, destName,
+          outDate: ods, inDate: null, nights: 0,
+          outRoute: bestOutRoute, retRoute: null,
+          total: bestOutCost
+        });
+      } else {
+        for (let rd = new Date(d); rd <= dTo; rd.setDate(rd.getDate() + 1)) {
+          if (searchCancelled) return finishCancelled();
+          const rds = formatDate(rd);
+          const rPrev = formatDate(addDays(rd, -1));
+          const nights = daysBetween(d, rd);
+          if (nights < minN || nights > maxN) continue;
+          if (wk && !coversWeekend(d, rd)) continue;
+
+          let bestRetCost = Infinity, bestRetRoute = null;
+
+          const directRet = directRetFares[rds];
+          if (directRet && !wheelOfFortuneMode) {
+            bestRetCost = directRet.price;
+            bestRetRoute = { type: 'direct', intCode: null, intCity: null, depDate: rds, dep: directRet.dep, arr: directRet.arr, price: directRet.price, legs: 1 };
+          }
+
+          for (const ic of retCandidates) {
+            const leg1 = allFares[destCode]?.[ic]?.[rds];
+            if (!leg1) continue;
+            const leg2 = allFares[ic]?.[origin]?.[rds];
+            if (!leg2 || !connects(leg1.arr, leg2.dep)) continue;
+            const total = leg1.price + leg2.price;
+            if (total < bestRetCost) {
+              bestRetCost = total;
+              const iCity = getGreekName(ic, MASTER_AIRPORT_NAMES[ic] || ic);
+              bestRetRoute = { type: 'via', intCode: ic, intCity: iCity, depDate: rds, leg1Price: leg1.price, leg2Price: leg2.price, dep1: leg1.dep, arr1: leg1.arr, dep2: leg2.dep, arr2: leg2.arr, price: total, legs: 2 };
+            }
+          }
+
+          if (rPrev >= ods) {
+            for (const ic of retCandidates) {
+              const leg1 = allFares[destCode]?.[ic]?.[rPrev];
+              if (!leg1) continue;
+              const leg2 = allFares[ic]?.[origin]?.[rds];
+              if (!leg2) continue;
+              const total = leg1.price + leg2.price;
+              if (total < bestRetCost) {
+                bestRetCost = total;
+                const iCity = getGreekName(ic, MASTER_AIRPORT_NAMES[ic] || ic);
+                bestRetRoute = { type: 'via1n', intCode: ic, intCity: iCity, depDate: rPrev, leg1Price: leg1.price, leg2Price: leg2.price, dep1: leg1.dep, arr1: leg1.arr, dep2: leg2.dep, arr2: leg2.arr, price: total, legs: 2 };
+              }
+            }
+          }
+
+          if (!bestRetRoute) continue;
+
+          allResults.push({
+            destCode, destName,
+            outDate: ods, inDate: rds, nights,
+            outRoute: bestOutRoute, retRoute: bestRetRoute,
+            total: bestOutCost + bestRetCost
+          });
+        }
+      }
+    }
+  }
+
+  if (searchCancelled) return finishCancelled();
+
+  allResults.sort((a, b) => a.total - b.total);
+
+  lastMultiDestPaths = allResults;
+  lastMultiDestCityNames = MASTER_AIRPORT_NAMES;
+  lastMultiDestDays = maxN;
+  lastMultiDestOrigin = origin;
+  if (wheelOfFortuneMode) {
+    lastMultiDestDestCode = 'WHEEL';
+    lastMultiDestDestName = t('wheelOfFortuneLabel');
+  } else {
+    lastMultiDestDestCode = destList.length === 1 ? destList[0] : destList.join(',');
+    lastMultiDestDestName = destList.length === 1
+      ? cityName(destList[0], allDestinations.find(d => d.code === destList[0])?.city || destList[0])
+      : `${destList.length} ${currentLang === 'el' ? 'προορισμοί' : 'destinations'}`;
+  }
+  displayMultiDestResults(allResults, MASTER_AIRPORT_NAMES, maxN, origin);
+
+  isSearching = false;
+  btn.disabled = false;
+  btn.textContent = t('search');
+  setCacheDot('fresh', t('completed', { n: allResults.length }));
+  } catch (e) {
+    isSearching = false;
+    const btn = document.getElementById('searchBtn');
+    if (btn) { btn.disabled = false; btn.textContent = t('search'); }
+    const content = document.getElementById('resultsContent');
+    if (content) content.innerHTML = `<div class="error-msg">${t('error')}: ${e.message}</div>`;
+    setCacheDot('empty', t('error'));
+  }
+}
+
+function displayMultiDestResults(paths, cityNames, totalDays, origin) {
+  const content = document.getElementById('resultsContent');
+  const sns = document.getElementById('simpleNightsFilter');
+  if (sns) sns.style.display = 'none';
+  if (paths.length === 0) {
+    content.innerHTML = `<div class="empty-msg"><div class="big-icon">&#128533;</div><p>${t('noRoutes')}</p></div>`;
+    document.getElementById('resultsInfo').textContent = '';
+    return;
+  }
+  const orgLabel = `${getOriginDisplayName(origin)} (${origin})`;
+  const isWheel = lastMultiDestDestCode === 'WHEEL';
+  const destLabel = isWheel
+    ? lastMultiDestDestName
+    : lastMultiDestDestCode && !lastMultiDestDestCode.includes(',')
+      ? `${cityName(lastMultiDestDestCode, lastMultiDestDestName)} (${lastMultiDestDestCode})`
+      : lastMultiDestDestName;
+
+  const prevSort = (document.getElementById('sortSelect') || {}).value || 'cheapest';
+
+  let html = `<div class="results-header"><h2 style="color:var(--pink)">${t('mcTitle', { org: orgLabel, dest: destLabel })}</h2><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap"><span class="info">${t('foundRoutes', { n: paths.length })}</span>`;
+
+  if (isWheel) {
+    const destCodes = [...new Set(paths.map(p => p.destCode))].sort((a, b) => {
+      const nameA = cityName(a, MASTER_AIRPORT_NAMES[a] || a).toLowerCase();
+      const nameB = cityName(b, MASTER_AIRPORT_NAMES[b] || b).toLowerCase();
+      return nameA.localeCompare(nameB);
+    });
+    html += `<select id="wheelDestFilter" onchange="filterWheelDest()" style="padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.85rem;outline:none;cursor:pointer"><option value="ALL">${t('wheelAllDests')} (${destCodes.length})</option>${destCodes.map(c => `<option value="${c}" ${wheelFilterDest === c ? 'selected' : ''}>${cityName(c, MASTER_AIRPORT_NAMES[c] || c)} (${c})</option>`).join('')}</select>`;
+  }
+
+  const nightsSet = [...new Set(paths.filter(p => p.nights > 0).map(p => p.nights))].sort((a, b) => a - b);
+  if (nightsSet.length > 0) {
+    html += `<select id="wheelNightsFilter" onchange="filterWheelNights()" style="padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.85rem;outline:none;cursor:pointer"><option value="ALL">${t('wheelAllNights')}</option>${nightsSet.map(n => `<option value="${n}" ${wheelFilterNights === String(n) ? 'selected' : ''}>${t('nightsShort', { n })}</option>`).join('')}</select>`;
+  }
+
+  html += `<select id="wheelWaitFilter" onchange="filterWheelWait()" style="padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.85rem;outline:none;cursor:pointer"><option value="ALL">${t('wheelWaitAll')}</option><option value="short" ${wheelFilterWait === 'short' ? 'selected' : ''}>${t('wheelWaitShort')}</option><option value="med" ${wheelFilterWait === 'med' ? 'selected' : ''}>${t('wheelWaitMed')}</option><option value="long" ${wheelFilterWait === 'long' ? 'selected' : ''}>${t('wheelWaitLong')}</option><option value="shortBoth" ${wheelFilterWait === 'shortBoth' ? 'selected' : ''}>${t('wheelWaitShortBoth')}</option><option value="medBoth" ${wheelFilterWait === 'medBoth' ? 'selected' : ''}>${t('wheelWaitMedBoth')}</option><option value="longBoth" ${wheelFilterWait === 'longBoth' ? 'selected' : ''}>${t('wheelWaitLongBoth')}</option></select>`;
+
+  html += `<select id="sortSelect" onchange="reSortMultiDest()" style="padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.85rem;outline:none;cursor:pointer"><option value="cheapest"${prevSort === 'cheapest' ? ' selected' : ''}>${t('cheapestSort')}</option><option value="outdate"${prevSort === 'outdate' ? ' selected' : ''}>${t('depDate')}</option><option value="nights"${prevSort === 'nights' ? ' selected' : ''}>${t('nightsSort')}</option></select></div></div>`;
+
+  if (isWheel) {
+    const destBestMap = {};
+    for (const p of paths) {
+      if (!destBestMap[p.destCode] || p.total < destBestMap[p.destCode].total) {
+        destBestMap[p.destCode] = { total: p.total, outDate: p.outDate, inDate: p.inDate, nights: p.nights };
+      }
+    }
+    const top10 = Object.entries(destBestMap).sort((a, b) => a[1].total - b[1].total).slice(0, 10);
+
+    if (top10.length > 0) {
+      const allDates = new Set();
+      for (const [, data] of top10) {
+        if (data.outDate) allDates.add(data.outDate);
+        if (data.inDate) allDates.add(data.inDate);
+      }
+      const calDates = [...allDates].sort();
+
+      html += `<div class="cal-section"><h3 style="margin:16px 0 10px;font-size:1rem;color:var(--pink)">${t('wheelTop10')}</h3><div class="cal-scroll"><table class="cal-table"><thead><tr><th>${t('destCol')}</th>`;
+      if (!isOneWay() && calDates.length > 0) {
+        for (const d of calDates) {
+          const day = new Date(d).getDay();
+          const names = I18N.dayNames[currentLang];
+          const cls = day === 0 || day === 6 ? ' cal-date-wknd' : '';
+          html += `<th class="cal-date${cls}"><span class="day-name">${names[day]}</span>${fmtDate(d)}</th>`;
+        }
+      } else {
+        html += `<th>${t('totalCol')}</th><th>${t('nightsCol')}</th>`;
+      }
+      html += `</tr></thead><tbody>`;
+
+      const rtMap = {};
+      for (const p of paths) {
+        const key = p.destCode + '|' + p.outDate;
+        if (!rtMap[key] || p.total < rtMap[key].total) rtMap[key] = { total: p.total, nights: p.nights, inDate: p.inDate };
+      }
+
+      for (let ti = 0; ti < top10.length; ti++) {
+        const [code, data] = top10[ti];
+        html += `<tr><td class="cal-dest" style="font-size:0.75rem">${ti + 1}. ${cityName(code, MASTER_AIRPORT_NAMES[code] || code)} (${code})</td>`;
+        if (!isOneWay() && calDates.length > 0) {
+          for (const d of calDates) {
+            const rt = rtMap[code + '|' + d];
+            if (rt) {
+              let cls = 'cal-cell';
+              if (rt.total === data.total) cls += ' cal-min';
+              html += `<td class="${cls}" style="font-size:0.75rem">${Number(rt.total).toFixed(0).replace('.',',')}€<span class="cal-nights">${t('nightsShort', { n: rt.nights })}</span></td>`;
+            } else {
+              html += `<td class="cal-cell cal-empty">-</td>`;
+            }
+          }
+        } else {
+          html += `<td class="cal-cell cal-min" style="font-size:0.75rem">${Number(data.total).toFixed(0).replace('.',',')}€</td>`;
+          html += `<td class="cal-cell" style="font-size:0.75rem">${data.nights || '-'}</td>`;
+        }
+        html += `</tr>`;
+      }
+      html += `</tbody></table></div></div>`;
+    }
+  }
+
+  const filteredPaths = paths.filter(p => {
+    if (isWheel && wheelFilterDest !== 'ALL' && p.destCode !== wheelFilterDest) return false;
+    if (wheelFilterNights !== 'ALL' && String(p.nights) !== wheelFilterNights) return false;
+    return true;
+  });
+
+  const finalPaths = wheelFilterWait !== 'ALL'
+    ? filteredPaths.filter(p => {
+        const outWait = getLegWait(p.outRoute);
+        const retWait = getLegWait(p.retRoute);
+        /* Χωρίς ανταπόκριση (απευθείας) δεν έχει νόημα το φίλτρο αναμονής */
+        if (outWait === null && retWait === null) return false;
+        const isBoth = wheelFilterWait.includes('Both');
+        const base = wheelFilterWait.replace('Both', '');
+        if (isBoth) {
+          if (base === 'short' && ((outWait !== null && outWait >= 3) || (retWait !== null && retWait >= 3))) return false;
+          if (base === 'med') {
+            if (outWait !== null && (outWait < 3 || outWait > 6)) return false;
+            if (retWait !== null && (retWait < 3 || retWait > 6)) return false;
+          }
+          if (base === 'long' && ((outWait !== null && outWait <= 6) || (retWait !== null && retWait <= 6))) return false;
+          return true;
+        } else {
+          const wait = getRouteMaxWait(p.outRoute, p.retRoute);
+          if (base === 'short' && wait >= 3) return false;
+          if (base === 'med' && (wait < 3 || wait > 6)) return false;
+          if (base === 'long' && wait <= 6) return false;
+          return true;
+        }
+      })
+    : filteredPaths;
+  const shown = finalPaths.slice(0, 500);
+
+  for (let pi = 0; pi < shown.length; pi++) {
+    const p = shown[pi];
+    const out = p.outRoute;
+    const ret = p.retRoute;
+    const intOutCity = out && out.intCity ? `${t('viaWord')}${cityName(out.intCode, out.intCity)} (${out.intCode})` : '';
+    const intRetCity = ret && ret.intCity ? `${t('viaWord')}${cityName(ret.intCode, ret.intCity)} (${ret.intCode})` : '';
+
+    const ow = !p.retRoute;
+    const _owW = getLegWait(out);
+    const _rwW = getLegWait(ret);
+    const _maxW = Math.max(_owW === null ? -1 : _owW, _rwW === null ? -1 : _rwW);
+    const _waitBadge = _maxW >= 0 ? ` &bull; ⏱ ${t('waitBadge', { n: fmtWait(_maxW) })}` : '';
+    html += `<div class="mc-card" style="border-left:4px solid #d32f2f">
+      <div class="mc-card-title" style="color:#d32f2f">#${pi + 1} — ${ow ? t('oneWayLabel') : t('totalLabel')}: <strong style="font-size:1.2rem">${Number(p.total).toFixed(2).replace('.',',')} €</strong></div>
+      <div style="font-size:0.8rem;color:var(--text2);margin-bottom:10px">
+        <span class="code-badge">${p.destCode}</span> ${cityName(p.destCode, p.destName)} &bull;
+        ${fmtDate(p.outDate)}${p.inDate ? ' → ' + fmtDate(p.inDate) : ''}${p.nights ? ' &bull; ' + t('nightsShort', { n: p.nights }) : ''} &bull; ${t('flights')}: ${(out.legs || 1) + (ow ? 0 : (ret.legs || 1))}${_waitBadge}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;background:var(--surface2);border-radius:10px;padding:10px;margin-bottom:8px">
+        <div style="font-weight:700;font-size:0.85rem;color:var(--accent);margin-bottom:4px">${t('outbound')}<span style="font-weight:400;color:var(--text2)">${intOutCity}</span></div>`;
+    if (out.type === 'direct') {
+      const otime = out.dep ? `<span style="font-size:0.75rem;color:var(--green);margin-left:4px">${out.dep}${out.arr ? '-' + out.arr : ''}</span>` : '';
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;flex-wrap:wrap">
+        <span style="font-weight:600;font-size:0.9rem;min-width:140px">${orgLabel} → ${cityName(p.destCode, p.destName)} (${p.destCode})</span>
+        <span style="color:var(--text2);font-size:0.85rem">${fmtDate(p.outDate)}${otime}</span>
+        <span style="color:var(--accent);font-weight:600;font-size:0.85rem">${Number(out.price).toFixed(2).replace('.',',')} €</span>
+      </div>`;
+    } else {
+      const t1 = out.dep1 ? `<span style="font-size:0.75rem;color:var(--green);margin-left:4px">${out.dep1}${out.arr1 ? '-' + out.arr1 : ''}</span>` : '';
+      const t2 = out.dep2 ? `<span style="font-size:0.75rem;color:var(--green);margin-left:4px">${out.dep2}${out.arr2 ? '-' + out.arr2 : ''}</span>` : '';
+      html += `<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;flex-wrap:wrap">
+        <span style="font-weight:600;font-size:0.9rem;min-width:140px">${orgLabel} → ${cityName(out.intCode, out.intCity)} (${out.intCode})</span>
+        <span style="color:var(--text2);font-size:0.85rem">${fmtDate(p.outDate)}${t1}</span>
+        <span style="color:var(--accent);font-weight:600;font-size:0.85rem">${Number(out.leg1Price).toFixed(2).replace('.',',')} €</span>
+      </div>
+      <div style="text-align:center;color:var(--border);font-size:0.7rem">↓</div>
+      <div style="display:flex;align-items:center;gap:8px;padding:4px 8px;flex-wrap:wrap">
+        <span style="font-weight:600;font-size:0.9rem;min-width:140px">${cityName(out.intCode, out.intCity)} (${out.intCode}) → ${cityName(p.destCode, p.destName)} (${p.destCode})</span>
+        <span style="color:var(--text2);font-size:0.85rem">${fmtDate(out.arrDate)}${t2}</span>
+        <span style="color:var(--accent);font-weight:600;font-size:0.85rem">${Number(out.leg2Price).toFixed(2).replace('.',',')} €</span>
+        <span style="font-size:0.8rem;color:var(--pink);font-weight:600">${out.type === 'via1n' ? t('oneNight') : t('sameDay')}</span>
+      </div>`;
+    }
+    html += `</div>`;
+    if (p.retRoute) {
+      html += `<div style="display:flex;flex-direction:column;gap:6px;background:rgba(79,172,254,0.06);border-radius:10px;padding:10px;margin-bottom:8px">
+        <div style="font-weight:700;font-size:0.85rem;color:var(--green);margin-bottom:4px">${t('return')}<span style="font-weight:400;color:var(--text2)">${intRetCity}</span></div>`;
+      if (ret.type === 'direct') {
+        const rt = ret.dep ? `<span style="font-size:0.75rem;color:var(--green);margin-left:4px">${ret.dep}${ret.arr ? '-' + ret.arr : ''}</span>` : '';
+        html += `<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;flex-wrap:wrap">
+          <span style="font-weight:600;font-size:0.9rem;min-width:140px">${cityName(p.destCode, p.destName)} (${p.destCode}) → ${orgLabel}</span>
+          <span style="color:var(--text2);font-size:0.85rem">${fmtDate(p.inDate)}${rt}</span>
+          <span style="color:var(--accent);font-weight:600;font-size:0.85rem">${Number(ret.price).toFixed(2).replace('.',',')} €</span>
+        </div>`;
+      } else {
+        const rt1 = ret.dep1 ? `<span style="font-size:0.75rem;color:var(--green);margin-left:4px">${ret.dep1}${ret.arr1 ? '-' + ret.arr1 : ''}</span>` : '';
+        const rt2 = ret.dep2 ? `<span style="font-size:0.75rem;color:var(--green);margin-left:4px">${ret.dep2}${ret.arr2 ? '-' + ret.arr2 : ''}</span>` : '';
+        html += `<div style="display:flex;align-items:center;gap:8px;padding:4px 8px;flex-wrap:wrap">
+          <span style="font-weight:600;font-size:0.9rem;min-width:140px">${cityName(p.destCode, p.destName)} (${p.destCode}) → ${cityName(ret.intCode, ret.intCity)} (${ret.intCode})</span>
+          <span style="color:var(--text2);font-size:0.85rem">${fmtDate(ret.depDate)}${rt1}</span>
+          <span style="color:var(--accent);font-weight:600;font-size:0.85rem">${Number(ret.leg1Price).toFixed(2).replace('.',',')} €</span>
+          <span style="font-size:0.8rem;color:var(--pink);font-weight:600">${ret.type === 'via1n' ? t('oneNight') : t('sameDay')}</span>
+        </div>
+        <div style="text-align:center;color:var(--border);font-size:0.7rem">↓</div>
+        <div style="display:flex;align-items:center;gap:8px;padding:4px 8px;flex-wrap:wrap">
+          <span style="font-weight:600;font-size:0.9rem;min-width:140px">${cityName(ret.intCode, ret.intCity)} (${ret.intCode}) → ${orgLabel}</span>
+          <span style="color:var(--text2);font-size:0.85rem">${fmtDate(p.inDate)}${rt2}</span>
+          <span style="color:var(--accent);font-weight:600;font-size:0.85rem">${Number(ret.leg2Price).toFixed(2).replace('.',',')} €</span>
+        </div>`;
+      }
+      html += `</div>`;
+    }
+    html += `<div style="text-align:center;font-size:0.95rem;color:var(--text2)">
+      ${t('outgoing')}: <strong>${Number(out.price).toFixed(2).replace('.',',')} €</strong>${ret ? ` &nbsp;+&nbsp; ${t('inbound')}: <strong>${Number(ret.price).toFixed(2).replace('.',',')} €</strong>` : ''}
+      &nbsp;=&nbsp; <strong style="color:var(--pink);font-size:1.1rem">${Number(p.total).toFixed(2).replace('.',',')} €</strong>
+    </div>`;
+    html += `</div>`;
+  }
+  if (finalPaths.length > 500) html += `<div style="text-align:center;padding:16px;color:var(--text2);font-size:0.9rem">${t('showing500', { n: finalPaths.length })}</div>`;
+  content.innerHTML = html;
+  document.getElementById('resultsInfo').textContent = t('mcRoutesFor', { n: finalPaths.length, dest: destLabel });
+  document.getElementById('resultsSection').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+/* --- Search --- */
+
+async function search() {
+  if (document.getElementById('multiDestMode').checked) {
+    return searchMultiDestination();
+  }
+  try {
+  if (isSearching) return;
+
+  const dateFrom = document.getElementById('dateFrom').value;
+  const dateTo = document.getElementById('dateTo').value;
+  let minN = Math.max(1, Math.min(30, parseInt(document.getElementById('minNights').value) || 2));
+  let maxN = Math.max(minN, Math.min(30, parseInt(document.getElementById('maxNights').value) || 5));
+  const wk = document.getElementById('weekendOnly').checked;
+
+  if (!dateFrom || !dateTo) return alert(t('pickDates'));
+  if (selectedDestinations.size === 0) return alert(t('pickDestPlural'));
+
+  const dFrom = new Date(dateFrom + 'T00:00:00');
+  const dTo = new Date(dateTo + 'T00:00:00');
+  if (dFrom >= dTo) return alert(t('dateOrder'));
+
+  simpleFilterNights = 'ALL';
+  searchCancelled = false;
+
+  isSearching = true;
+  const btn = document.getElementById('searchBtn');
+  btn.disabled = true;
+  btn.textContent = t('searching');
+
+  setCacheDot('loading', t('fetching'));
+  const content = document.getElementById('resultsContent');
+  content.innerHTML = `<div class="loading"><div class="spinner"></div><div class="progress-text" id="progText">${t('fetchingReal')}</div><div class="progress-bar"><div class="progress-bar-fill" id="progBar" style="width:0%"></div></div><div style="margin-top:14px"><button class="btn btn-secondary" id="cancelBtn" onclick="cancelSearch()" style="padding:8px 20px;font-size:0.8rem">${t('cancel')}</button></div><div class="skel-wrap"><div class="skel skel-line"></div><div class="skel skel-card"></div><div class="skel skel-card"></div></div></div>`;
+  document.getElementById('resultsInfo').textContent = '';
+
+  const destList = allDestinations.filter(d => selectedDestinations.has(d.code));
+  const total = destList.length;
+  const months = getMonthsInRange(dFrom, dTo);
+  const monthDelay = months.length > 6 ? 200 : 0;
+  const faresData = {};
+  const results = [];
+
+  for (let di = 0; di < destList.length; di++) {
+    if (searchCancelled) return finishCancelled();
+    const dest = destList[di];
+    const pct = (di / total) * 100;
+    const pt = document.getElementById('progText');
+    const pb = document.getElementById('progBar');
+    if (pt) pt.textContent = `[${di+1}/${total}] ${cityName(dest.code, dest.city)} (${dest.code})...`;
+    if (pb) pb.style.width = pct + '%';
+
+    const ow = isOneWay();
+    const oMap = {}, iMap = {};
+    let hasData = false;
+
+    for (const m of months) {
+      if (searchCancelled) return finishCancelled();
+      const oProm = fetchFares(currentOrigin, dest.code, m).catch(() => []);
+      const iProm = ow ? Promise.resolve([]) : fetchFares(dest.code, currentOrigin, m).catch(() => []);
+      const [o, n] = await Promise.all([oProm, iProm]);
+      for (const f of o) { const dt = new Date(f.day + 'T00:00:00'); if (dt >= dFrom && dt <= dTo) { oMap[f.day] = { price: f.price.value, dep: f.departureDate ? f.departureDate.substring(11,16) : null, arr: f.arrivalDate ? f.arrivalDate.substring(11,16) : null }; hasData = true; } }
+      if (!ow) for (const f of n) { const dt = new Date(f.day + 'T00:00:00'); if (dt >= dFrom && dt <= dTo) { iMap[f.day] = { price: f.price.value, dep: f.departureDate ? f.departureDate.substring(11,16) : null, arr: f.arrivalDate ? f.arrivalDate.substring(11,16) : null }; hasData = true; } }
+      if (monthDelay) await new Promise(r => setTimeout(r, monthDelay));
+    }
+
+    /* retry once if no data at all */
+    if (!hasData && !searchCancelled) {
+      if (pt) pt.textContent = `[${di+1}/${total}] ${cityName(dest.code, dest.city)} — ${t('retry')}...`;
+      await new Promise(r => setTimeout(r, 2000));
+      for (const m of months) {
+        if (searchCancelled) return finishCancelled();
+        const oProm = fetchFares(currentOrigin, dest.code, m).catch(() => []);
+        const iProm = ow ? Promise.resolve([]) : fetchFares(dest.code, currentOrigin, m).catch(() => []);
+        const [o, n] = await Promise.all([oProm, iProm]);
+        for (const f of o) { const dt = new Date(f.day + 'T00:00:00'); if (dt >= dFrom && dt <= dTo) { oMap[f.day] = { price: f.price.value, dep: f.departureDate ? f.departureDate.substring(11,16) : null, arr: f.arrivalDate ? f.arrivalDate.substring(11,16) : null }; hasData = true; } }
+        if (!ow) for (const f of n) { const dt = new Date(f.day + 'T00:00:00'); if (dt >= dFrom && dt <= dTo) { iMap[f.day] = { price: f.price.value, dep: f.departureDate ? f.departureDate.substring(11,16) : null, arr: f.arrivalDate ? f.arrivalDate.substring(11,16) : null }; hasData = true; } }
+        if (monthDelay) await new Promise(r => setTimeout(r, monthDelay));
+      }
+    }
+
+    faresData[dest.code] = { outbound: oMap, inbound: iMap };
+
+    if (hasData) {
+      if (ow) {
+        for (const [od, op] of Object.entries(oMap)) {
+          results.push({ destCode: dest.code, destName: cityName(dest.code, dest.city), outDate: od, inDate: null, nights: 0, outPrice: op.price, inPrice: 0, total: op.price, outDep: op.dep, outArr: op.arr, inDep: null, inArr: null });
+        }
+      } else {
+        for (const [od, op] of Object.entries(oMap)) {
+          const odd = new Date(od + 'T00:00:00');
+          for (const [id, ip] of Object.entries(iMap)) {
+            const idd = new Date(id + 'T00:00:00');
+            const nn = daysBetween(odd, idd);
+            if (nn >= minN && nn <= maxN && (!wk || coversWeekend(odd, idd))) {
+              results.push({ destCode: dest.code, destName: cityName(dest.code, dest.city), outDate: od, inDate: id, nights: nn, outPrice: op.price, inPrice: ip.price, total: op.price + ip.price, outDep: op.dep, outArr: op.arr, inDep: ip.dep, inArr: ip.arr });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /* update progress */
+  const pt = document.getElementById('progText');
+  const pb = document.getElementById('progBar');
+  if (pt) pt.textContent = t('calcMulti');
+  if (pb) pb.style.width = '100%';
+
+  if (searchCancelled) return finishCancelled();
+
+  results.sort((a, b) => a.total - b.total);
+
+  /* multi-city (only for round-trip) */
+  lastResults = [];
+  lastMcResults = [];
+  const mcResults = [];
+  if (!isOneWay() && results.length > 0 && !searchCancelled) {
+    const candidates = results.slice(0, Math.min(results.length, 10));
+    for (let ci = 0; ci < candidates.length; ci += 2) {
+      if (searchCancelled) return finishCancelled();
+      const batch = candidates.slice(ci, ci + 2);
+      const br = await Promise.allSettled(batch.map(async (r) => {
+        const inDt = new Date(r.inDate + 'T00:00:00');
+        let bestB = { price: Infinity, code: null, city: null, dep: null, arr: null };
+        for (const d of destList) {
+          if (d.code === r.destCode) continue;
+          const f = faresData[d.code];
+          if (!f || !f.inbound) continue;
+          const p = f.inbound[r.inDate];
+          if (p && p.price !== undefined && p.price < bestB.price) bestB = { price: p.price, code: d.code, city: d.city, dep: p.dep, arr: p.arr };
+        }
+        if (!bestB.code || bestB.price >= r.inPrice) return null;
+
+        for (const offset of [1, 2]) {
+          const connDt = addDays(inDt, -offset);
+          if (connDt <= new Date(r.outDate + 'T00:00:00')) continue;
+          const cd = formatDate(connDt);
+          let ab = null, connDep = null, connArr = null;
+          try {
+            const faresAB = await fetchFares(r.destCode, bestB.code, connDt);
+            const found = faresAB.find(f => f.day === cd);
+            if (found && found.price && found.price.value != null) { ab = found.price.value; connDep = found.departureDate ? found.departureDate.substring(11,16) : null; connArr = found.arrivalDate ? found.arrivalDate.substring(11,16) : null; }
+          } catch {}
+          if (ab === null) continue;
+          const mcTotal = r.outPrice + ab + bestB.price;
+          if (mcTotal >= r.total) continue;
+          return {
+            destCode: r.destCode, destName: r.destName,
+            outDate: r.outDate, inDate: r.inDate, nights: r.nights,
+            outPrice: r.outPrice, inPrice: bestB.price,
+            total: mcTotal, multiCity: true,
+            viaCode: bestB.code, viaCity: bestB.city,
+            connDate: cd, connPrice: ab,
+            directReturn: r.inPrice, directTotal: r.total,
+            outDep: r.outDep, outArr: r.outArr,
+            connDep: connDep, connArr: connArr,
+            inDep: bestB.dep, inArr: bestB.arr
+          };
+        }
+        return null;
+      }));
+      for (const res of br) {
+        if (res.status === 'fulfilled' && res.value) mcResults.push(res.value);
+      }
+    }
+  }
+
+  lastResults = results;
+  lastMcResults = mcResults;
+  lastFaresData = faresData;
+  setCacheDot('fresh', t('updated', { time: new Date().toLocaleString(currentLang === 'el' ? 'el-GR' : 'en-GB'), n: destList.length }));
+  renderResults();
+
+  isSearching = false;
+  btn.disabled = false;
+  btn.textContent = t('search');
+  } catch (e) {
+    isSearching = false;
+    const btn = document.getElementById('searchBtn');
+    if (btn) { btn.disabled = false; btn.textContent = t('search'); }
+    const content = document.getElementById('resultsContent');
+    if (content) content.innerHTML = `<div class="error-msg">${t('error')}: ${e.message}</div>`;
+    setCacheDot('empty', t('error'));
+  }
+}
+
+/* --- Render / re-sort --- */
+
+function renderResults() {
+  const sortBy = document.getElementById('sortBy').value;
+  const content = document.getElementById('resultsContent');
+  const mcCount = lastMcResults.length;
+  let displayResults = [...lastResults];
+  const ow = displayResults.length > 0 && displayResults[0].inDate === null;
+
+  const nightsSel = document.getElementById('simpleNightsFilter');
+  if (nightsSel) {
+    if (!ow && lastResults.length > 0) {
+      const nightsSet = [...new Set(lastResults.map(r => r.nights).filter(n => n > 0))].sort((a, b) => a - b);
+      nightsSel.innerHTML = `<option value="ALL">${t('wheelAllNights')}</option>${nightsSet.map(n => `<option value="${n}" ${simpleFilterNights === String(n) ? 'selected' : ''}>${t('nightsShort', { n })}</option>`).join('')}`;
+      nightsSel.style.display = '';
+    } else {
+      nightsSel.style.display = 'none';
+      simpleFilterNights = 'ALL';
+    }
+  }
+
+  if (!ow && simpleFilterNights !== 'ALL') {
+    displayResults = displayResults.filter(r => String(r.nights) === simpleFilterNights);
+  }
+
+  if (sortBy === 'date') {
+    displayResults.sort((a, b) => a.outDate.localeCompare(b.outDate) || a.total - b.total);
+  }
+  const regularCount = displayResults.length;
+  const sortLabel = sortBy === 'price' ? t('cheapestPlural', { n: displayResults.length }) : t('closestDates', { n: displayResults.length });
+  document.getElementById('resultsInfo').textContent = `${ow ? t('oneWayDash') : ''}${ow ? t('foundFlights', { n: regularCount }) : t('foundCombos', { n: regularCount })}${!ow && mcCount > 0 ? t('multiCityAdd', { n: mcCount }) : ''} — ${sortLabel}`;
+
+  if (displayResults.length === 0 && mcCount === 0) {
+    const hasData = lastResults.length > 0 || lastMcResults.length > 0;
+    content.innerHTML = `<div class="empty-msg"><div class="big-icon">&#128533;</div><p>${t('noResults')}</p><p style="color:#666;font-size:0.9rem;margin-top:8px">${hasData ? t('tryOtherDates') : t('noApiData')}</p></div>`;
+  } else {
+    let html = '';
+    /* calendar view only for round-trip */
+    if (!ow && Object.keys(lastFaresData).length > 0) {
+      const rtMap = {};
+      for (const r of lastResults) {
+        const key = r.destCode + '|' + r.outDate;
+        if (!rtMap[key] || r.total < rtMap[key].total) rtMap[key] = { total: r.total, nights: r.nights };
+      }
+      const dateSet = new Set();
+      const calDestCodes = [];
+      for (const [code, data] of Object.entries(lastFaresData)) {
+        if (!data || Object.keys(data.outbound).length === 0 && Object.keys(data.inbound).length === 0) continue;
+        calDestCodes.push(code);
+        for (const d of Object.keys(data.outbound)) dateSet.add(d);
+      }
+      const calDates = [...dateSet].sort();
+      if (calDates.length > 0 && calDestCodes.length > 0) {
+        html += `<div class="cal-section"><h3>${t('calTitle')}</h3><div class="cal-scroll"><table class="cal-table"><thead><tr><th>${t('cities')}</th>${calDates.map(d => {
+          const day = new Date(d).getDay();
+          const names = I18N.dayNames[currentLang];
+          const cls = day === 0 || day === 6 ? ' cal-date-wknd' : '';
+          return `<th class="cal-date${cls}"><span class="day-name">${names[day]}</span>${fmtDate(d)}</th>`;
+        }).join('')}</tr></thead><tbody>`;
+        for (const code of calDestCodes) {
+          const dest = allDestinations.find(d => d.code === code);
+          let minTotal = Infinity, maxTotal = -Infinity;
+          for (const d of calDates) {
+            const rt = rtMap[code + '|' + d];
+            if (rt) {
+              if (rt.total < minTotal) minTotal = rt.total;
+              if (rt.total > maxTotal) maxTotal = rt.total;
+            }
+          }
+          html += `<tr><td class="cal-dest">${dest ? `${cityName(code, dest.city)} (${code})` : code}</td>`;
+          for (const d of calDates) {
+            const rt = rtMap[code + '|' + d];
+            if (rt) {
+              let cls = 'cal-cell';
+              if (rt.total === minTotal && minTotal < Infinity) cls += ' cal-min';
+              if (rt.total === maxTotal && maxTotal > -Infinity && minTotal !== maxTotal) cls += ' cal-max';
+              html += `<td class="${cls}">${Number(rt.total).toFixed(0).replace('.',',')}€<span class="cal-nights">${t('nightsShort', { n: rt.nights })}</span></td>`;
+            } else {
+              html += `<td class="cal-cell cal-empty">-</td>`;
+            }
+          }
+          html += `</tr>`;
+        }
+        html += `</tbody></table></div></div>`;
+      }
+    }
+    if (displayResults.length > 0) {
+      const colHeaders = ow
+        ? `<th>#</th><th>${t('destCol')}</th><th>${t('depCol')}</th><th>${t('totalCol')}</th>`
+        : `<th>#</th><th>${t('destCol')}</th><th>${t('depCol')}</th><th>${t('retCol')}</th><th>${t('nightsCol')}</th><th>${t('outCol')}</th><th>${t('inCol')}</th><th>${t('totalCol')}</th>`;
+      html += `<div class="table-wrap"><table><thead><tr>${colHeaders}</tr></thead><tbody>${displayResults.map((r, i) => {
+        const rc = i < 3 ? `rank-${i+1}` : 'rank-other';
+        const outTime = r.outDep ? `<span style="font-size:0.75rem;color:var(--green);display:inline-block;margin-left:4px">${r.outDep}${r.outArr ? '-' + r.outArr : ''}</span>` : '';
+        const inTime = r.inDep ? `<span style="font-size:0.75rem;color:var(--green);display:inline-block;margin-left:4px">${r.inDep}${r.inArr ? '-' + r.inArr : ''}</span>` : '';
+        if (ow) {
+          return `<tr><td><span class="rank-badge ${rc}">${i+1}</span></td><td><div class="dest-cell"><span class="code-badge">${r.destCode}</span> ${cityName(r.destCode, r.destName)}</div></td><td>${fmtDate(r.outDate)}${outTime}</td><td class="price-total">${Number(r.total).toFixed(2).replace('.',',')} €</td></tr>`;
+        }
+        return `<tr><td><span class="rank-badge ${rc}">${i+1}</span></td><td><div class="dest-cell"><span class="code-badge">${r.destCode}</span> ${cityName(r.destCode, r.destName)}</div></td><td>${fmtDate(r.outDate)}${outTime}</td><td>${fmtDate(r.inDate)}${inTime}</td><td><span class="nights-badge">${r.nights}</span></td><td class="price">${Number(r.outPrice).toFixed(2).replace('.',',')} €</td><td class="price">${Number(r.inPrice).toFixed(2).replace('.',',')} €</td><td class="price-total">${Number(r.total).toFixed(2).replace('.',',')} €</td></tr>`;
+      }).join('')}</tbody></table></div>`;
+    }
+    if (!ow && mcCount > 0) {
+      html += `<div class="mc-section"><h3 style="margin:16px 0 10px;font-size:1rem;color:var(--accent)">${t('mcProposals')}</h3>${lastMcResults.map((r, i) => {
+        const saved = r.directTotal - r.total;
+        const ot = r.outDep ? `<span style="font-size:0.7rem;color:var(--green);margin-left:3px">${r.outDep}${r.outArr?'-'+r.outArr:''}</span>` : '';
+        const ct = r.connDep ? `<span style="font-size:0.7rem;color:var(--green);margin-left:3px">${r.connDep}${r.connArr?'-'+r.connArr:''}</span>` : '';
+        const it = r.inDep ? `<span style="font-size:0.7rem;color:var(--green);margin-left:3px">${r.inDep}${r.inArr?'-'+r.inArr:''}</span>` : '';
+        return `<div class="mc-card">
+          <div class="mc-card-title">#${i+1} — ${cityName(r.destCode, r.destName)} (${r.destCode}) <span class="mc-label">MC</span></div>
+          <div class="mc-legs">
+            <div class="mc-leg"><span class="mc-route">${currentOrigin} → ${cityName(r.destCode, r.destName)} (${r.destCode})</span><span class="mc-date">${fmtDate(r.outDate)}${ot}</span><span class="mc-price">${Number(r.outPrice).toFixed(2).replace('.',',')} €</span></div>
+            <div class="mc-arrow">↓</div>
+            <div class="mc-leg mc-mid"><span class="mc-route">${r.destCode} → ${cityName(r.viaCode, r.viaCity)} (${r.viaCode})</span><span class="mc-date">${fmtDate(r.connDate)}${ct}</span><span class="mc-price">${Number(r.connPrice).toFixed(2).replace('.',',')} €</span></div>
+            <div class="mc-arrow">↓</div>
+            <div class="mc-leg"><span class="mc-route">${r.viaCode} → ${currentOrigin}</span><span class="mc-date">${fmtDate(r.inDate)}${it}</span><span class="mc-price">${Number(r.inPrice).toFixed(2).replace('.',',')} €</span></div>
+          </div>
+          <div class="mc-compare"><span class="mc-strikethrough">${r.destCode}→${currentOrigin}: ${Number(r.directReturn).toFixed(2).replace('.',',')} €</span>&ensp;↦&ensp;<span class="mc-via-route">${r.destCode}→${r.viaCode} + ${r.viaCode}→${currentOrigin}: ${Number(r.connPrice + r.inPrice).toFixed(2).replace('.',',')} €</span> <span class="mc-saved">(${t('saving', { n: Number(saved).toFixed(2).replace('.',',') })})</span></div>
+          <div class="mc-total">${t('totalLabel')}: <strong>${Number(r.total).toFixed(2).replace('.',',')} €</strong></div>
+        </div>`;
+      }).join('')}</div>`;
+    }
+    content.innerHTML = html;
+  }
+}
+
+function filterSimpleNights() {
+  const sel = document.getElementById('simpleNightsFilter');
+  if (sel) simpleFilterNights = sel.value;
+  renderResults();
+}
+
+function reSortResults() {
+  if (document.getElementById('sortSelect')) return; /* multi-dest results shown */
+  renderResults();
+}
+
+function filterWheelDest() {
+  const sel = document.getElementById('wheelDestFilter');
+  if (sel) wheelFilterDest = sel.value;
+  reSortMultiDest();
+}
+
+function filterWheelNights() {
+  const sel = document.getElementById('wheelNightsFilter');
+  if (sel) wheelFilterNights = sel.value;
+  reSortMultiDest();
+}
+
+function filterWheelWait() {
+  const sel = document.getElementById('wheelWaitFilter');
+  if (sel) wheelFilterWait = sel.value;
+  reSortMultiDest();
+}
+
+function reSortMultiDest() {
+  if (!lastMultiDestPaths) return;
+  const sel = document.getElementById('sortSelect');
+  if (!sel) return displayMultiDestResults(lastMultiDestPaths, lastMultiDestCityNames, lastMultiDestDays, lastMultiDestOrigin);
+  const sortVal = sel.value;
+  let sorted;
+  if (sortVal === 'outdate') {
+    sorted = [...lastMultiDestPaths].sort((a, b) => a.outDate.localeCompare(b.outDate) || a.total - b.total);
+  } else if (sortVal === 'nights') {
+    sorted = [...lastMultiDestPaths].sort((a, b) => a.nights - b.nights || a.total - b.total);
+  } else {
+    sorted = [...lastMultiDestPaths].sort((a, b) => a.total - b.total);
+  }
+  displayMultiDestResults(sorted, lastMultiDestCityNames, lastMultiDestDays, lastMultiDestOrigin);
+}
+
+/* --- Init --- */
+
+function initApp() {
+  setCacheDot('empty', t('init'));
+  setLang(currentLang);
+  try {
+    if (localStorage.getItem('rfpFiltersCollapsed') === '1') toggleFilters(true);
+  } catch (e) {}
+}
+
+initApp();
+</script>
+</body>
+</html>
