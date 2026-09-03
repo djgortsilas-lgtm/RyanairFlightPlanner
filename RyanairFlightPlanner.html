@@ -291,8 +291,11 @@ tr:hover td { background: rgba(79,172,254,0.04); }
 
 @media (max-width: 768px) {
   body { padding: 12px; }
-  header { padding: 24px 16px; }
+  header { padding: 16px 14px; }
   header h1 { font-size: 1.6rem; }
+  .header-topbar { margin-bottom: 10px; }
+  .help-btn { padding: 5px 10px; font-size: 0.75rem; }
+  .header-flags button svg { display: block; }
   .filters, .results { padding: 16px; border-radius: 16px; }
   .filter-grid { grid-template-columns: 1fr; }
   .filter-group input, .filter-group select, #originSelect, .results-controls select { font-size: 16px; }
@@ -338,6 +341,11 @@ button:focus-visible, select:focus-visible, input:focus-visible {
   font-size: 0.82rem; font-weight: 700; cursor: pointer; transition: all 0.2s;
 }
 .help-btn:hover { background: linear-gradient(135deg, var(--accent), var(--violet)); color: #fff; border-color: transparent; }
+.header-topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  gap: 8px; margin-bottom: 12px;
+}
+.header-flags { display: flex; gap: 8px; align-items: center; }
 @keyframes fadeUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 .mc-card { transition: transform 0.2s ease, box-shadow 0.2s ease; animation: fadeUp 0.35s ease both; }
 .mc-card:hover { transform: translateY(-2px); box-shadow: 0 6px 18px rgba(245,87,108,0.12); }
@@ -354,10 +362,11 @@ button:focus-visible, select:focus-visible, input:focus-visible {
 <body>
 <div class="container">
   <header style="position:relative">
-    <div style="position:absolute;top:16px;left:16px;display:flex;gap:8px;align-items:center">
-      <button class="help-btn" id="helpBtn" onclick="openHelpModal()" data-i18n="helpBtn">Βοήθεια / Οδηγίες</button>
-    </div>
-    <div style="position:absolute;top:16px;right:16px;display:flex;gap:8px;align-items:center">
+    <div class="header-topbar">
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="help-btn" id="helpBtn" onclick="openHelpModal()" data-i18n="helpBtn">Βοήθεια / Οδηγίες</button>
+      </div>
+      <div class="header-flags">
       <button id="flagEl" onclick="setLang('el')" title="Ελληνικά" style="background:none;border:none;cursor:pointer;line-height:1;padding:2px">
         <svg width="24" height="16" viewBox="0 0 27 18" xmlns="http://www.w3.org/2000/svg">
           <rect width="27" height="18" fill="#ffffff"/>
@@ -384,6 +393,7 @@ button:focus-visible, select:focus-visible, input:focus-visible {
           </g>
         </svg>
       </button>
+    </div>
     </div>
     <h1>RyanairFlightPlanner v.2</h1>
     <div class="city-selector">
@@ -528,7 +538,7 @@ const I18N = {
   helpBtn: { el: 'Βοήθεια / Οδηγίες', en: 'Help / Guide' },
   helpTitle: { el: 'Βοήθεια / Οδηγίες', en: 'Help / Guide' },
   helpBody: {
-    el: '<p>Η εφαρμογή ψάχνει ανάμεσα στα δρομολόγια της Ryanair να βρει πτήσεις που ανταποκρίνονται στα φίλτρα που ορίζει ο χρήστης, με ΑΦΕΤΗΡΙΑ το αεροδρόμιο που επιθυμεί. Για παράδειγμα: Από ημερομηνία 1/10/2026 έως 15/11/2026 και για διανυκτερεύσεις 3 έως 7 η εφαρμογή αναζητά ταξίδια μέσα στο εύρος των ημερομηνιών για 3 ή 4 ή 5 ή 6 ή 7 διανυκτερεύσεις, στον ή τους προορισμούς που έχουν επιλεχθεί. Μπορεί να οριστεί επιπλέον φίλτρο ώστε τα ταξίδια να περιλαμβάνουν Σαββατοκύριακο (βλ. αντίστοιχο checkbox).</p><p style="margin-top:10px"><strong>Multidestination:</strong> Έχοντας τσεκαρισμένη αυτή την λειτουργία, μπορούμε να επιλέξουμε κάποιον προορισμό που δεν ταξιδεύει με απευθείας πτήσεις από την ΑΦΕΤΗΡΙΑ η Ryanair, οπότε και βρίσκει πτήσεις μέσω ανταπόκρισης. Σε περίπτωση που είναι τσεκαρισμένο και το <strong>Wheel of fortune</strong>, τότε η εφαρμογή ψάχνει όλους τους δυνατούς συνδυασμούς προορισμών με ανταπόκριση, με βάση τα γενικά φίλτρα του χρήστη.</p>',
+    el: '<p>Η εφαρμογή ψάχνει ανάμεσα στα δρομολόγια της Ryanair να βρει πτήσεις που ανταποκρίνονται στα φίλτρα που ορίζει ο χρήστης, με ΑΦΕΤΗΡΙΑ το αεροδρόμιο που επιθυμεί. Για παράδειγμα: Από ημερομηνία 1/10/2026 έως 15/11/2026 και για διανυκτερεύσεις 3 έως 7 η εφαρμογή αναζητά ταξίδια μέσα στο εύρος των ημερομηνιών για 3 ή 4 ή 5 ή 6 ή 7 διανυκτερεύσεις, στον ή στους προορισμούς που έχουν επιλεχθεί. Μπορεί να οριστεί επιπλέον φίλτρο ώστε τα ταξίδια να περιλαμβάνουν Σαββατοκύριακο (βλ. αντίστοιχο checkbox).</p><p style="margin-top:10px"><strong>Multidestination:</strong> Έχοντας τσεκαρισμένη αυτή την λειτουργία, μπορούμε να επιλέξουμε κάποιον προορισμό που δεν ταξιδεύει με απευθείας πτήσεις από την ΑΦΕΤΗΡΙΑ η Ryanair, οπότε και βρίσκει πτήσεις μέσω ανταπόκρισης. Σε περίπτωση που είναι τσεκαρισμένο και το <strong>Wheel of fortune</strong>, τότε η εφαρμογή ψάχνει όλους τους δυνατούς συνδυασμούς προορισμών με ανταπόκριση, με βάση τα γενικά φίλτρα του χρήστη.</p>',
     en: '<p>The app searches Ryanair schedules to find flights matching the user-defined filters, with ORIGIN set to the desired airport. For example: From date 1/10/2026 to 15/11/2026 and for 3 to 7 nights, the app searches for trips within the date range with 3 or 4 or 5 or 6 or 7 nights, for the selected destination(s). An extra filter can be set so that trips include a weekend (see the corresponding checkbox).</p><p style="margin-top:10px"><strong>Multidestination:</strong> With this option checked, you can select a destination not served by Ryanair with direct flights from the ORIGIN, and the app finds flights via a connection. If <strong>Wheel of Fortune</strong> is also checked, the app searches all possible connecting destination combinations, based on the user\'s general filters.</p>'
   },
   search: { el: 'Αναζήτηση', en: 'Search' },
