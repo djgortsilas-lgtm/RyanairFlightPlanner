@@ -487,6 +487,9 @@ button:focus-visible, select:focus-visible, input:focus-visible {
         <select id="simpleNightsFilter" onchange="filterSimpleNights()" style="display:none;padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.85rem;outline:none;cursor:pointer">
           <option value="ALL" data-i18n="wheelAllNights">Όλες οι διανυκτερεύσεις</option>
         </select>
+        <select id="simpleCityFilter" onchange="filterSimpleCity()" style="display:none;padding:6px 12px;border-radius:8px;border:1.5px solid var(--border);background:var(--surface2);color:var(--text);font-size:0.85rem;outline:none;cursor:pointer">
+          <option value="ALL" data-i18n="cityAll">Όλες οι πόλεις</option>
+        </select>
         <span class="info" id="resultsInfo"></span>
       </div>
     </div>
@@ -612,6 +615,7 @@ const I18N = {
   wheelOfFortuneGridMsg: { el: 'Ο "Τροχός της τύχης" ενεργοποιήθηκε — θα ελεγχθούν όλοι οι προορισμοί αυτόματα.', en: '"Wheel of Fortune" is enabled — all destinations will be checked automatically.' },
   wheelOfFortuneLabel: { el: 'Τροχός της τύχης', en: 'Wheel of Fortune' },
   wheelAllDests: { el: 'Όλοι οι προορισμοί', en: 'All destinations' },
+  cityAll: { el: 'Όλες οι πόλεις', en: 'All cities' },
   wheelFilterDest: { el: 'Φίλτρο προορισμού', en: 'Destination filter' },
   wheelTop10: { el: 'Τοπ 10 φθηνότεροι προορισμοί', en: 'Top 10 cheapest destinations' },
   wheelAllNights: { el: 'Όλες οι διανυκτερεύσεις', en: 'All nights' },
@@ -706,6 +710,7 @@ let wheelFilterDest = 'ALL';
 let wheelFilterNights = 'ALL';
 let wheelFilterWait = 'ALL';
 let simpleFilterNights = 'ALL';
+let simpleFilterCity = 'ALL';
 
 let currentOrigin = 'SKG';
 
@@ -1386,10 +1391,6 @@ function getOriginDirectCodes() {
   return new Set(list ? list.map(d => d.code) : []);
 }
 
-function getOriginDisplayName(code) {
-  return getGreekName(code, MASTER_AIRPORT_NAMES[code] || code);
-}
-
 function fmtDate(iso) { const [y,m,d] = iso.split('-'); return `${d}/${m}/${y}`; }
 
 function formatDate(d) {
@@ -1523,6 +1524,117 @@ function onTripTypeChange() {
   const wf = document.getElementById('weekendFilter');
   if (nf) nf.style.opacity = ow ? '0.3' : '1';
   if (wf) wf.style.opacity = ow ? '0.3' : '1';
+}
+
+/* --- Auto-sync διανυκτερεύσεων από το εύρος ημερομηνιών ---
+   diff = ΕΩΣ - ΑΠΟ (σε μέρες). Μπαίνει ως default και στα δύο πεδία
+   (από / έως) και αποτελεί τη μέγιστη τιμή του πεδίου "έως".
+   Μετά ο χρήστης μπορεί να αλλάξει ελεύθερα τα νούμερα. */
+function getDateRangeNights() {
+  const df = document.getElementById('dateFrom')?.value;
+  const dt = document.getElementById('dateTo')?.value;
+  if (!df || !dt) return null;
+  const dFrom = new Date(df + 'T00:00:00');
+  const dTo = new Date(dt + 'T00:00:00');
+  if (isNaN(dFrom) || isNaN(dTo)) return null;
+  const diff = daysBetween(dFrom, dTo);
+  if (diff < 1) return null;
+  return diff;
+}
+
+function syncNightsFromDates() {
+  const diff = getDateRangeNights();
+  if (diff === null) return;
+  const minEl = document.getElementById('minNights');
+  const maxEl = document.getElementById('maxNights');
+  if (!minEl || !maxEl) return;
+  minEl.max = String(diff);
+  maxEl.max = String(diff);
+  minEl.value = String(diff);
+  maxEl.value = String(diff);
+}
+
+function clampNightsInputs() {
+  const diff = getDateRangeNights();
+  const cap = diff === null ? 30 : diff;
+  const minEl = document.getElementById('minNights');
+  const maxEl = document.getElementById('maxNights');
+  if (!minEl || !maxEl) return;
+  minEl.max = String(cap);
+  maxEl.max = String(cap);
+  let minN = parseInt(minEl.value, 10);
+  let maxN = parseInt(maxEl.value, 10);
+  if (isNaN(minN)) minN = 1;
+  if (isNaN(maxN)) maxN = minN;
+  minN = Math.max(1, Math.min(cap, minN));
+  maxN = Math.max(minN, Math.min(cap, maxN));
+  minEl.value = String(minN);
+  maxEl.value = String(maxN);
+}
+
+/* Κοινός parser για τα πεδία διανυκτερεύσεων: σέβεται το δυναμικό
+   ανώτατο όριο (διαφορά ημερομηνιών, αλλιώς 30). */
+function readNightsRange() {
+  const diff = getDateRangeNights();
+  const cap = diff === null ? 30 : diff;
+  let minN = parseInt(document.getElementById('minNights')?.value, 10);
+  let maxN = parseInt(document.getElementById('maxNights')?.value, 10);
+  if (isNaN(minN)) minN = 2;
+  if (isNaN(maxN)) maxN = 5;
+  minN = Math.max(1, Math.min(cap, minN));
+  maxN = Math.max(minN, Math.min(cap, maxN));
+  return { minN, maxN };
+}
+
+/* --- Αμοιβαίος περιορισμός: ΑΠΟ < ΕΩΣ (και αντιστρόφως) ---
+   Όποια ημερομηνία αλλάξει, η άλλη διορθώνεται αυτόματα ώστε
+   να ισχύει πάντα ΑΠΟ < ΕΩΣ, και ενημερώνονται τα min/max
+   attributes των date inputs. */
+function enforceDateOrder(changed) {
+  const df = document.getElementById('dateFrom');
+  const dt = document.getElementById('dateTo');
+  if (!df || !dt) return;
+  if (df.value) {
+    const dFrom = new Date(df.value + 'T00:00:00');
+    if (!isNaN(dFrom)) dt.min = formatDate(addDays(dFrom, 1));
+  } else {
+    dt.removeAttribute('min');
+  }
+  if (dt.value) {
+    const dTo = new Date(dt.value + 'T00:00:00');
+    if (!isNaN(dTo)) df.max = formatDate(addDays(dTo, -1));
+  } else {
+    df.removeAttribute('max');
+  }
+  if (df.value && dt.value) {
+    const dFrom = new Date(df.value + 'T00:00:00');
+    const dTo = new Date(dt.value + 'T00:00:00');
+    if (isNaN(dFrom) || isNaN(dTo)) return;
+    if (dTo <= dFrom) {
+      if (changed === 'to') {
+        df.value = formatDate(addDays(dTo, -1));
+        const nf = new Date(df.value + 'T00:00:00');
+        if (!isNaN(nf)) dt.min = formatDate(addDays(nf, 1));
+      } else {
+        dt.value = formatDate(addDays(dFrom, 1));
+        const nt = new Date(dt.value + 'T00:00:00');
+        if (!isNaN(nt)) df.max = formatDate(addDays(nt, -1));
+      }
+    }
+  }
+}
+
+function onDateChange(changed) {
+  enforceDateOrder(changed);
+  /* κρατά το max των διανυκτερεύσεων συγχρονισμένο με το εύρος
+     (diff όταν υπάρχουν ημερομηνίες, αλλιώς 30) χωρίς να πειράζει
+     τις τιμές — τις τιμές θέτει το syncNightsFromDates όταν ισχύει */
+  const cap = getDateRangeNights() ?? 30;
+  const minEl = document.getElementById('minNights');
+  const maxEl = document.getElementById('maxNights');
+  if (minEl) minEl.max = String(cap);
+  if (maxEl) maxEl.max = String(cap);
+  syncNightsFromDates();
 }
 
 function setCacheDot(cls, text) {
@@ -1757,8 +1869,7 @@ async function searchMultiDestination() {
 
   const dateFrom = document.getElementById('dateFrom').value;
   const dateTo = document.getElementById('dateTo').value;
-  let minN = Math.max(1, Math.min(30, parseInt(document.getElementById('minNights').value) || 2));
-  let maxN = Math.max(minN, Math.min(30, parseInt(document.getElementById('maxNights').value) || 5));
+  const { minN, maxN } = readNightsRange();
   const wk = document.getElementById('weekendOnly').checked;
 
   if (!dateFrom || !dateTo) return alert(t('pickDates'));
@@ -2038,6 +2149,8 @@ function displayMultiDestResults(paths, cityNames, totalDays, origin) {
   const content = document.getElementById('resultsContent');
   const sns = document.getElementById('simpleNightsFilter');
   if (sns) sns.style.display = 'none';
+  const scs = document.getElementById('simpleCityFilter');
+  if (scs) scs.style.display = 'none';
   if (paths.length === 0) {
     content.innerHTML = `<div class="empty-msg"><div class="big-icon">&#128533;</div><p>${t('noRoutes')}</p></div>`;
     document.getElementById('resultsInfo').textContent = '';
@@ -2261,8 +2374,7 @@ async function search() {
 
   const dateFrom = document.getElementById('dateFrom').value;
   const dateTo = document.getElementById('dateTo').value;
-  let minN = Math.max(1, Math.min(30, parseInt(document.getElementById('minNights').value) || 2));
-  let maxN = Math.max(minN, Math.min(30, parseInt(document.getElementById('maxNights').value) || 5));
+  const { minN, maxN } = readNightsRange();
   const wk = document.getElementById('weekendOnly').checked;
 
   if (!dateFrom || !dateTo) return alert(t('pickDates'));
@@ -2273,6 +2385,7 @@ async function search() {
   if (dFrom >= dTo) return alert(t('dateOrder'));
 
   simpleFilterNights = 'ALL';
+  simpleFilterCity = 'ALL';
   searchCancelled = false;
 
   isSearching = true;
@@ -2461,6 +2574,38 @@ function renderResults() {
     displayResults = displayResults.filter(r => String(r.nights) === simpleFilterNights);
   }
 
+  const citySel = document.getElementById('simpleCityFilter');
+  if (citySel) {
+    if (lastResults.length > 0) {
+      const cityCodes = [...new Set(lastResults.map(r => r.destCode))].sort((a, b) => {
+        const ra = lastResults.find(r => r.destCode === a);
+        const rb = lastResults.find(r => r.destCode === b);
+        const na = cityName(a, (ra && ra.destName) || MASTER_AIRPORT_NAMES[a] || a).toLowerCase();
+        const nb = cityName(b, (rb && rb.destName) || MASTER_AIRPORT_NAMES[b] || b).toLowerCase();
+        return na.localeCompare(nb);
+      });
+      if (simpleFilterCity !== 'ALL' && !cityCodes.includes(simpleFilterCity)) simpleFilterCity = 'ALL';
+      if (cityCodes.length > 1) {
+        citySel.innerHTML = `<option value="ALL">${t('cityAll')} (${cityCodes.length})</option>${cityCodes.map(c => {
+          const rr = lastResults.find(r => r.destCode === c);
+          const nm = cityName(c, (rr && rr.destName) || MASTER_AIRPORT_NAMES[c] || c);
+          return `<option value="${c}" ${simpleFilterCity === c ? 'selected' : ''}>${nm} (${c})</option>`;
+        }).join('')}`;
+        citySel.style.display = '';
+      } else {
+        citySel.style.display = 'none';
+        simpleFilterCity = 'ALL';
+      }
+    } else {
+      citySel.style.display = 'none';
+      simpleFilterCity = 'ALL';
+    }
+  }
+
+  if (simpleFilterCity !== 'ALL') {
+    displayResults = displayResults.filter(r => r.destCode === simpleFilterCity);
+  }
+
   if (sortBy === 'date') {
     displayResults.sort((a, b) => a.outDate.localeCompare(b.outDate) || a.total - b.total);
   }
@@ -2483,6 +2628,7 @@ function renderResults() {
       const dateSet = new Set();
       const calDestCodes = [];
       for (const [code, data] of Object.entries(lastFaresData)) {
+        if (simpleFilterCity !== 'ALL' && code !== simpleFilterCity) continue;
         if (!data || Object.keys(data.outbound).length === 0 && Object.keys(data.inbound).length === 0) continue;
         calDestCodes.push(code);
         for (const d of Object.keys(data.outbound)) dateSet.add(d);
@@ -2566,6 +2712,12 @@ function filterSimpleNights() {
   renderResults();
 }
 
+function filterSimpleCity() {
+  const sel = document.getElementById('simpleCityFilter');
+  if (sel) simpleFilterCity = sel.value;
+  renderResults();
+}
+
 function reSortResults() {
   if (document.getElementById('sortSelect')) return; /* multi-dest results shown */
   renderResults();
@@ -2610,6 +2762,15 @@ function reSortMultiDest() {
 function initApp() {
   setCacheDot('empty', t('init'));
   setLang(currentLang);
+  const df = document.getElementById('dateFrom');
+  const dt = document.getElementById('dateTo');
+  const minEl = document.getElementById('minNights');
+  const maxEl = document.getElementById('maxNights');
+  if (df) df.addEventListener('change', () => onDateChange('from'));
+  if (dt) dt.addEventListener('change', () => onDateChange('to'));
+  if (minEl) minEl.addEventListener('change', clampNightsInputs);
+  if (maxEl) maxEl.addEventListener('change', clampNightsInputs);
+  enforceDateOrder();
   try {
     if (localStorage.getItem('rfpFiltersCollapsed') === '1') toggleFilters(true);
   } catch (e) {}
