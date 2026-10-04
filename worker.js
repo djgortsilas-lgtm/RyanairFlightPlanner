@@ -135,6 +135,7 @@ self.onmessage = async function(e) {
             maxN, 
             wk, 
             isOneWay, 
+            isMc,
             wheelOfFortuneMode, 
             masterAirports,
             originDestMap
@@ -144,7 +145,7 @@ self.onmessage = async function(e) {
             const dFrom = new Date(dateFrom + 'T00:00:00');
             const dTo = new Date(dateTo + 'T00:00:00');
             
-            if (wheelOfFortuneMode) {
+            if (isMc) {
                 const results = await performMultiDestSearch(origin, destList, dFrom, dTo, minN, maxN, wk, isOneWay, wheelOfFortuneMode, masterAirports, originDestMap);
                 self.postMessage({ type: 'RESULTS', payload: results });
             } else {
@@ -220,48 +221,97 @@ async function performStandardSearch(origin, destList, dFrom, dTo, minN, maxN, w
     return results.sort((a, b) => a.total - b.total);
 }
 
+/* Multi-destination results have to carry the same flat price fields as the
+   standard search, otherwise renderResults() renders "—" in both price
+   columns. Route shapes: direct keeps dep/arr, via keeps dep1/arr1/dep2/arr2. */
+function packMultiDest(destCode, destName, outDate, inDate, nights, outRoute, retRoute) {
+    const outP = outRoute ? outRoute.price : 0;
+    const retP = retRoute ? retRoute.price : 0;
+    return {
+        destCode, destName, outDate, inDate, nights,
+        outRoute, retRoute,
+        outPrice: outP,
+        inPrice: retP,
+        outDep: outRoute ? (outRoute.dep1 || outRoute.dep || null) : null,
+        outArr: outRoute ? (outRoute.arr2 || outRoute.arr || null) : null,
+        inDep: retRoute ? (retRoute.dep1 || retRoute.dep || null) : null,
+        inArr: retRoute ? (retRoute.arr2 || retRoute.arr || null) : null,
+        total: outP + retP
+    };
+}
+
 async function performMultiDestSearch(origin, destList, dFrom, dTo, minN, maxN, wk, isOneWay, wheelOfFortuneMode, masterAirports, originDestMap) {
     const allResults = [];
     const months = getMonthsInRange(dFrom, dTo);
     const allFares = {};
+    const inflight = {};
 
+    /* Concurrent callers must await the same fetch, otherwise the second
+       one gets the still-empty map object and moves on too early. */
     async function ensureFares(from, to) {
         if (!allFares[from]) allFares[from] = {};
+        if (!inflight[from]) inflight[from] = {};
+        if (inflight[from][to]) return inflight[from][to];
         if (allFares[from][to]) return allFares[from][to];
         const map = {};
         allFares[from][to] = map;
-        for (const m of months) {
-            try {
-                const fares = await fetchFares(from, to, m);
-                for (const f of fares) {
-                    const dt = new Date(f.day + 'T00:00:00');
-                    if (dt >= dFrom && dt <= dTo) {
-                        map[f.day] = { price: f.price.value, dep: f.departureDate?.substring(11,16), arr: f.arrivalDate?.substring(11,16) };
+        const p = (async () => {
+            for (const m of months) {
+                try {
+                    const fares = await fetchFares(from, to, m);
+                    for (const f of fares) {
+                        const dt = new Date(f.day + 'T00:00:00');
+                        if (dt >= dFrom && dt <= dTo) {
+                            map[f.day] = { price: f.price.value, dep: f.departureDate?.substring(11,16), arr: f.arrivalDate?.substring(11,16) };
+                        }
                     }
-                }
-            } catch (e) {}
+                } catch (e) {}
+            }
+            return map;
+        })();
+        inflight[from][to] = p;
+        try {
+            return await p;
+        } finally {
+            delete inflight[from][to];
         }
-        return map;
+    }
+
+    const CONCURRENCY = 12;
+    async function runPool(items, limit, worker) {
+        let cursor = 0;
+        const runners = [];
+        const n = Math.min(limit, items.length);
+        for (let k = 0; k < n; k++) {
+            runners.push((async () => {
+                while (cursor < items.length) {
+                    const i = cursor++;
+                    await worker(items[i], i);
+                }
+            })());
+        }
+        await Promise.all(runners);
     }
 
     let pool = masterAirports.filter(a => a.code !== origin && (wheelOfFortuneMode || !destList.includes(a.code)));
     const poolSize = pool.length;
     const viableOutbound = new Set();
     const viableReturn = new Set();
+    let scanned = 0;
 
-    for (let i = 0; i < pool.length; i++) {
-        const airport = pool[i];
+    await runPool(pool, CONCURRENCY, async (airport) => {
         const outMap = await ensureFares(origin, airport.code);
         if (Object.keys(outMap).length > 0) viableOutbound.add(airport.code);
         if (!isOneWay) {
             const retMap = await ensureFares(airport.code, origin);
             if (Object.keys(retMap).length > 0) viableReturn.add(airport.code);
         }
-        self.postMessage({ type: 'PROGRESS', payload: { 
-            pct: (i / poolSize) * 40, 
-            msg: `Scanning intermediaries: ${i+1}/${poolSize}` 
+        scanned++;
+        self.postMessage({ type: 'PROGRESS', payload: {
+            pct: (scanned / poolSize) * 40,
+            msg: `Scanning intermediaries: ${scanned}/${poolSize}`
         }});
-    }
+    });
 
     const targets = wheelOfFortuneMode ? masterAirports.filter(a => a.code !== origin).map(a => a.code) : destList;
     
@@ -330,7 +380,7 @@ async function performMultiDestSearch(origin, destList, dFrom, dTo, minN, maxN, 
             if (!bestOutRoute) continue;
 
             if (isOneWay) {
-                allResults.push({ destCode, destName, outDate: ods, inDate: null, nights: 0, outRoute: bestOutRoute, retRoute: null, total: bestOutCost });
+                allResults.push(packMultiDest(destCode, destName, ods, null, 0, bestOutRoute, null));
             } else {
                 for (let rd = new Date(d); rd <= dTo; rd.setDate(rd.getDate() + 1)) {
                     const rds = formatDate(rd);
@@ -373,7 +423,7 @@ async function performMultiDestSearch(origin, destList, dFrom, dTo, minN, maxN, 
                     }
 
                     if (!bestRetRoute) continue;
-                    allResults.push({ destCode, destName, outDate: ods, inDate: rds, nights, outRoute: bestOutRoute, retRoute: bestRetRoute, total: bestOutCost + bestRetCost });
+                    allResults.push(packMultiDest(destCode, destName, ods, rds, nights, bestOutRoute, bestRetRoute));
                 }
             }
         }

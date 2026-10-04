@@ -587,6 +587,17 @@ tbody tr:last-child td { border-bottom: none; }
 td.num, th.num { text-align: right; }
 
 .dest-cell { display: flex; align-items: center; gap: 9px; }
+.route-cell { white-space: nowrap; }
+.route-leg { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-2); }
+.route-leg-ret { margin-top: 2px; }
+.route-arrow { color: var(--text-3); padding: 0 2px; }
+.route-dim { color: var(--text-3); font-weight: 500; font-size: 0.74rem; }
+.via-badge {
+  display: inline-block; padding: 1px 7px; margin: 0 1px;
+  border-radius: 6px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.4px;
+  background: linear-gradient(135deg, rgba(236,72,153,0.2), rgba(251,146,60,0.2));
+  color: #be1e6d; border: 1px solid rgba(236,72,153,0.32);
+}
 .code-badge {
   padding: 3px 9px; border-radius: 7px;
   background: linear-gradient(135deg, rgba(139,92,246,0.18), rgba(6,182,212,0.18));
@@ -884,6 +895,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focu
   .dest-item.is-direct .dest-code { color: #6ee7b7; }
   .dest-item.is-direct .dest-name { color: #6ee7b7; }
   .code-badge { color: #ddd6fe; border-color: rgba(139,92,246,0.45); }
+  .via-badge { color: #f9a8d4; border-color: rgba(236,72,153,0.45); background: linear-gradient(135deg, rgba(236,72,153,0.24), rgba(251,146,60,0.2)); }
   .price { color: #67e8f9; background: rgba(6,182,212,0.14); }
   .nights-badge { color: #ddd6fe; border-color: #6d28d9; background: linear-gradient(135deg, rgba(139,92,246,0.22), rgba(6,182,212,0.18)); }
   th { color: #ddd6fe; background: linear-gradient(160deg, #262c4a, #1d223c 60%, #172b3a); border-bottom-color: #4c1d95; }

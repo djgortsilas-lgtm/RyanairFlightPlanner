@@ -83,6 +83,8 @@ const I18N = {
   cities: { el: 'ΠΟΛΕΙΣ', en: 'CITIES' },
   dayNames: { el: ['ΚΥ','ΔΕ','ΤΡ','ΤΕ','ΠΕ','ΠΑ','ΣΑ'], en: ['SU','MO','TU','WE','TH','FR','SA'] },
   destCol: { el: 'Προορισμός', en: 'Destination' },
+  routeCol: { el: 'Διαδρομή', en: 'Route' },
+  directLabel: { el: 'απευθείας', en: 'direct' },
   depCol: { el: 'Αναχώρηση', en: 'Departure' },
   retCol: { el: 'Επιστροφή', en: 'Return' },
   nightsCol: { el: 'Διαν.', en: 'Nts' },
@@ -366,8 +368,120 @@ function clearAllFilters() {
     document.getElementById('maxNights').value = '5';
     document.getElementById('weekendOnly').checked = false;
     selectedDestinations.clear();
+    enforceDateOrder();
+    clampNightsInputs();
     loadDestinations();
     updateDestCount();
+}
+
+/* --- Dates & nights ---
+   TO must always be strictly after FROM, and the nights range follows the
+   chosen window. Without this the inputs stay at their 2-5 defaults, so a
+   20-day window silently only ever returns 2-5 night trips. */
+function formatDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+function daysBetween(a, b) { return Math.round((b - a) / 86400000); }
+function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate() + n); return r; }
+
+function getDateRangeNights() {
+  const df = document.getElementById('dateFrom')?.value;
+  const dt = document.getElementById('dateTo')?.value;
+  if (!df || !dt) return null;
+  const dFrom = new Date(df + 'T00:00:00');
+  const dTo = new Date(dt + 'T00:00:00');
+  if (isNaN(dFrom) || isNaN(dTo)) return null;
+  const diff = daysBetween(dFrom, dTo);
+  return diff < 1 ? null : diff;
+}
+
+function syncNightsFromDates() {
+  const diff = getDateRangeNights();
+  if (diff === null) return;
+  const minEl = document.getElementById('minNights');
+  const maxEl = document.getElementById('maxNights');
+  if (!minEl || !maxEl) return;
+  minEl.max = String(diff);
+  maxEl.max = String(diff);
+  minEl.value = String(diff);
+  maxEl.value = String(diff);
+}
+
+function clampNightsInputs() {
+  const diff = getDateRangeNights();
+  const cap = diff === null ? 30 : diff;
+  const minEl = document.getElementById('minNights');
+  const maxEl = document.getElementById('maxNights');
+  if (!minEl || !maxEl) return;
+  minEl.max = String(cap);
+  maxEl.max = String(cap);
+  let minN = parseInt(minEl.value, 10);
+  let maxN = parseInt(maxEl.value, 10);
+  if (isNaN(minN)) minN = 1;
+  if (isNaN(maxN)) maxN = minN;
+  minN = Math.max(1, Math.min(cap, minN));
+  maxN = Math.max(minN, Math.min(cap, maxN));
+  minEl.value = String(minN);
+  maxEl.value = String(maxN);
+}
+
+function readNightsRange() {
+  const diff = getDateRangeNights();
+  const cap = diff === null ? 30 : diff;
+  let minN = parseInt(document.getElementById('minNights')?.value, 10);
+  let maxN = parseInt(document.getElementById('maxNights')?.value, 10);
+  if (isNaN(minN)) minN = 2;
+  if (isNaN(maxN)) maxN = 5;
+  minN = Math.max(1, Math.min(cap, minN));
+  maxN = Math.max(minN, Math.min(cap, maxN));
+  return { minN, maxN };
+}
+
+function enforceDateOrder(changed) {
+  const df = document.getElementById('dateFrom');
+  const dt = document.getElementById('dateTo');
+  if (!df || !dt) return;
+  if (df.value) {
+    const dFrom = new Date(df.value + 'T00:00:00');
+    if (!isNaN(dFrom)) dt.min = formatDate(addDays(dFrom, 1));
+  } else {
+    dt.removeAttribute('min');
+  }
+  if (dt.value) {
+    const dTo = new Date(dt.value + 'T00:00:00');
+    if (!isNaN(dTo)) df.max = formatDate(addDays(dTo, -1));
+  } else {
+    df.max = '';
+    df.removeAttribute('max');
+  }
+  if (!df.value || !dt.value) return;
+  const dFrom = new Date(df.value + 'T00:00:00');
+  const dTo = new Date(dt.value + 'T00:00:00');
+  if (isNaN(dFrom) || isNaN(dTo)) return;
+  if (dTo <= dFrom) {
+    if (changed === 'to') {
+      df.value = formatDate(addDays(dTo, -1));
+      const nf = new Date(df.value + 'T00:00:00');
+      if (!isNaN(nf)) dt.min = formatDate(addDays(nf, 1));
+    } else {
+      dt.value = formatDate(addDays(dFrom, 1));
+      const nt = new Date(dt.value + 'T00:00:00');
+      if (!isNaN(nt)) df.max = formatDate(addDays(nt, -1));
+    }
+  }
+}
+
+function onDateChange(changed) {
+  enforceDateOrder(changed);
+  const cap = getDateRangeNights() ?? 30;
+  const minEl = document.getElementById('minNights');
+  const maxEl = document.getElementById('maxNights');
+  if (minEl) minEl.max = String(cap);
+  if (maxEl) maxEl.max = String(cap);
+  syncNightsFromDates();
 }
 
 /* --- Search Execution (Worker) --- */
@@ -382,8 +496,7 @@ async function search() {
   const dTo = new Date(dateTo + 'T00:00:00');
   if (dFrom >= dTo) return alert(t('dateOrder'));
 
-  const minN = parseInt(document.getElementById('minNights').value, 10) || 2;
-  const maxN = parseInt(document.getElementById('maxNights').value, 10) || 5;
+  const { minN, maxN } = readNightsRange();
   const wk = document.getElementById('weekendOnly').checked;
   const isOneWay = document.querySelector('input[name="tripType"]:checked')?.value === 'oneway';
   const isMc = document.getElementById('multiDestMode').checked;
@@ -420,7 +533,7 @@ async function search() {
     payload: {
       origin: currentOrigin,
       destList: isMc ? [...selectedDestinations] : (data.destinations[currentOrigin] || []).filter(d => selectedDestinations.has(d.code)),
-      dateFrom, dateTo, minN, maxN, wk, isOneWay, wheelOfFortuneMode,
+      dateFrom, dateTo, minN, maxN, wk, isOneWay, isMc, wheelOfFortuneMode,
       masterAirports,
       originDestMap: data.destinations
     }
@@ -471,14 +584,30 @@ function renderResults() {
     return;
   }
 
+  const isMulti = displayResults.some(r => r.outRoute);
+
   const colHeaders = ow
-    ? `<th>#</th><th>${t('destCol')}</th><th>${t('depCol')}</th><th class="num">${t('totalCol')}</th>`
-    : `<th>#</th><th>${t('destCol')}</th><th>${t('depCol')}</th><th>${t('retCol')}</th><th class="num">${t('nightsCol')}</th><th class="num">${t('outCol')}</th><th class="num">${t('inCol')}</th><th class="num">${t('totalCol')}</th>`;
+    ? `<th>#</th><th>${t('destCol')}</th>${isMulti ? `<th>${t('routeCol')}</th>` : ''}<th>${t('depCol')}</th><th class="num">${t('totalCol')}</th>`
+    : `<th>#</th><th>${t('destCol')}</th>${isMulti ? `<th>${t('routeCol')}</th>` : ''}<th>${t('depCol')}</th><th>${t('retCol')}</th><th class="num">${t('nightsCol')}</th><th class="num">${t('outCol')}</th><th class="num">${t('inCol')}</th><th class="num">${t('totalCol')}</th>`;
+
+  const legHtml = (route, from, to) => {
+    if (!route) return '';
+    if (route.intCode) {
+      return `${from} <span class="route-arrow">&rarr;</span> <span class="via-badge">${route.intCode}</span> <span class="route-arrow">&rarr;</span> ${to}`;
+    }
+    return `${from} <span class="route-arrow">&rarr;</span> ${to} <span class="route-dim">(${t('directLabel')})</span>`;
+  };
 
   let html = `<div class="table-wrap"><table><thead><tr>${colHeaders}</tr></thead><tbody>`;
   displayResults.forEach((r, i) => {
     const rc = i < 3 ? `rank-${i+1}` : 'rank-other';
-    const cell = `<td><span class="rank-badge ${rc}">${i+1}</span></td><td><div class="dest-cell"><span class="code-badge">${r.destCode}</span><span>${cityName(r.destCode, r.destName)}</span></div></td><td>${fmtDate(r.outDate)}</td>`;
+    let cell = `<td><span class="rank-badge ${rc}">${i+1}</span></td><td><div class="dest-cell"><span class="code-badge">${r.destCode}</span><span>${cityName(r.destCode, r.destName)}</span></div></td>`;
+    if (isMulti) {
+      const out = legHtml(r.outRoute, currentOrigin, r.destCode);
+      const ret = r.retRoute ? legHtml(r.retRoute, r.destCode, currentOrigin) : '';
+      cell += `<td class="route-cell"><span class="route-leg">${out}</span>${ret ? `<span class="route-leg route-leg-ret">${ret}</span>` : ''}</td>`;
+    }
+    cell += `<td>${fmtDate(r.outDate)}</td>`;
     if (ow) {
       html += `<tr>${cell}<td class="price-total num">${fmtEuro(r.total)}</td></tr>`;
     } else {
@@ -536,6 +665,15 @@ function closeHelpModal() { document.getElementById('helpModal').classList.remov
 function initApp() {
   document.getElementById('flagEl')?.classList.toggle('is-active', currentLang === 'el');
   document.getElementById('flagEn')?.classList.toggle('is-active', currentLang === 'en');
+  const df = document.getElementById('dateFrom');
+  const dt = document.getElementById('dateTo');
+  const minEl = document.getElementById('minNights');
+  const maxEl = document.getElementById('maxNights');
+  if (df) df.addEventListener('change', () => onDateChange('from'));
+  if (dt) dt.addEventListener('change', () => onDateChange('to'));
+  if (minEl) minEl.addEventListener('change', clampNightsInputs);
+  if (maxEl) maxEl.addEventListener('change', clampNightsInputs);
+  enforceDateOrder();
   setCacheDot('loading', t('init'));
   loadAppData();
   onTripTypeChange();
