@@ -592,6 +592,38 @@ td.num, th.num { text-align: right; }
 .route-leg-ret { margin-top: 2px; }
 .route-arrow { color: var(--text-3); padding: 0 2px; }
 .route-dim { color: var(--text-3); font-weight: 500; font-size: 0.74rem; }
+
+/* flight times next to the date in the Departure / Return columns */
+.time-span { display: inline-block; margin-left: 6px; font-size: 0.74rem; font-weight: 700; color: var(--green); white-space: nowrap; }
+
+/* detailed multi-destination itinerary, nested under the Route cell */
+.itin { margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); min-width: 250px; white-space: normal; }
+.leg-line { display: flex; align-items: baseline; gap: 8px; font-size: 0.75rem; padding: 2px 0; }
+.leg-route { font-weight: 700; color: var(--text); }
+.leg-time { color: var(--text-2); font-weight: 600; font-size: 0.72rem; }
+.leg-price { margin-left: auto; font-weight: 700; color: var(--text); }
+.leg-sum { font-size: 0.72rem; color: var(--text-2); text-align: right; padding-top: 3px; border-top: 1px dashed var(--border-2); margin-top: 3px; }
+.leg-sum strong { color: var(--text); }
+.itin-sep { height: 1px; background: var(--border-2); margin: 6px 0; }
+
+/* round-trip price calendar: green = cheapest, red = most expensive */
+.cal-section { margin-bottom: 22px; }
+.cal-section h3 { font-size: 0.95rem; margin-bottom: 8px; color: var(--text); }
+.cal-legend { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--text-2); margin-bottom: 8px; }
+.cal-legend-chip { display: inline-block; width: 14px; height: 14px; border-radius: 4px; border: 1px solid var(--border-2); }
+.cal-legend-cheap { background: hsl(140 65% 88%); }
+.cal-legend-expensive { background: hsl(0 70% 90%); margin-left: 10px; }
+.cal-scroll { overflow-x: auto; border-radius: 12px; border: 1px solid var(--border); }
+.cal-table { border-collapse: collapse; font-size: 0.78rem; width: 100%; }
+.cal-table th { background: var(--surface-2); color: var(--text-2); font-weight: 600; padding: 7px 8px; border: 1px solid var(--border); text-align: center; white-space: nowrap; }
+.cal-table td { padding: 5px 8px; border: 1px solid var(--border); text-align: center; }
+.cal-table .cal-dest { font-weight: 700; color: var(--accent); text-align: left; white-space: nowrap; position: sticky; left: 0; background: var(--surface); z-index: 2; }
+.cal-table .cal-date { font-size: 0.68rem; line-height: 1.35; }
+.cal-table .cal-date .day-name { display: block; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.5px; }
+.cal-table .cal-date-wknd { color: #dc2626; }
+.cal-cell { font-weight: 700; font-size: 0.82rem; background: hsl(var(--heat, 140) 62% 93%); }
+.cal-nights { display: block; font-size: 0.68rem; color: var(--text-2); font-weight: 600; line-height: 1; }
+.cal-empty { color: var(--text-3); font-weight: 400; background: transparent; }
 .via-badge {
   display: inline-block; padding: 1px 7px; margin: 0 1px;
   border-radius: 6px; font-size: 0.72rem; font-weight: 800; letter-spacing: 0.4px;
@@ -896,6 +928,10 @@ button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focu
   .dest-item.is-direct .dest-name { color: #6ee7b7; }
   .code-badge { color: #ddd6fe; border-color: rgba(139,92,246,0.45); }
   .via-badge { color: #f9a8d4; border-color: rgba(236,72,153,0.45); background: linear-gradient(135deg, rgba(236,72,153,0.24), rgba(251,146,60,0.2)); }
+.time-span { color: #34d399; }
+.cal-cell { background: hsl(var(--heat, 140) 45% 20%); }
+.cal-legend-cheap { background: hsl(140 45% 20%); }
+.cal-legend-expensive { background: hsl(0 50% 24%); }
   .price { color: #67e8f9; background: rgba(6,182,212,0.14); }
   .nights-badge { color: #ddd6fe; border-color: #6d28d9; background: linear-gradient(135deg, rgba(139,92,246,0.22), rgba(6,182,212,0.18)); }
   th { color: #ddd6fe; background: linear-gradient(160deg, #262c4a, #1d223c 60%, #172b3a); border-bottom-color: #4c1d95; }

@@ -85,6 +85,9 @@ const I18N = {
   destCol: { el: 'Προορισμός', en: 'Destination' },
   routeCol: { el: 'Διαδρομή', en: 'Route' },
   directLabel: { el: 'απευθείας', en: 'direct' },
+  legTotal: { el: 'Σύνολο', en: 'Total' },
+  calCheaper: { el: 'Φθηνότερο', en: 'Cheapest' },
+  calCostlier: { el: 'Ακριβότερο', en: 'Most expensive' },
   depCol: { el: 'Αναχώρηση', en: 'Departure' },
   retCol: { el: 'Επιστροφή', en: 'Return' },
   nightsCol: { el: 'Διαν.', en: 'Nts' },
@@ -204,8 +207,7 @@ function setLang(lang) {
   initOriginSelect();
   loadDestinations();
   updateDestCount();
-  if (lastMultiDestPaths) displayMultiDestResults(lastMultiDestPaths, data?.greekCityNames, lastMultiDestDays, lastMultiDestOrigin);
-  else if (lastResults.length > 0 || lastMcResults.length > 0) renderResults();
+  if (lastResults.length > 0 || lastMcResults.length > 0) renderResults();
 }
 
 function initOriginSelect() {
@@ -520,7 +522,7 @@ async function search() {
       if (pt) pt.textContent = payload.msg || `${t('fetching')} ${Math.round(payload.pct)}%`;
       if (pb) pb.style.width = Math.min(100, payload.pct) + '%';
     } else if (type === 'RESULTS') {
-      handleSearchSuccess(payload);
+      handleSearchSuccess(payload, e.data.faresData || {});
     } else if (type === 'ERROR') {
       handleSearchError(payload);
     }
@@ -540,14 +542,15 @@ async function search() {
   });
 }
 
-function handleSearchSuccess(results) {
+function handleSearchSuccess(results, faresData) {
   isSearching = false;
   const btn = document.getElementById('searchBtn');
   btn.disabled = false;
   btn.textContent = t('search');
   setCacheDot('fresh', t('completed', { n: results.length }));
   
-  lastResults = results; // Simplified for this version
+  lastResults = results;
+  lastFaresData = faresData || {};
   renderResults();
 }
 
@@ -567,6 +570,97 @@ function cancelSearch() {
 }
 
 /* --- Results Rendering --- */
+
+/* Flight times, e.g. 05:40-06:50. Returns '' when the API gave no times. */
+function timeSpan(dep, arr) {
+  if (!dep && !arr) return '';
+  const span = `${dep || '—'}${arr ? '-' + arr : ''}`;
+  return `<span class="time-span">${span}</span>`;
+}
+
+/* One leg line inside a detailed multi-destination itinerary. */
+function legLine(from, to, dep, arr, price) {
+  const p = price == null ? '' : `<span class="leg-price">${fmtEuro(price)}</span>`;
+  return `<div class="leg-line"><span class="leg-route">${from} <span class="route-arrow">&rarr;</span> ${to}</span><span class="leg-time">${timeSpan(dep, arr)}</span>${p}</div>`;
+}
+
+/* Detailed itinerary for a multi-destination row: every leg, its times and
+   its own price, for the outbound and the return direction. */
+function itineraryHtml(r) {
+  const dir = (route, from, to) => {
+    if (!route) return '';
+    if (route.intCode) {
+      return legLine(from, route.intCode, route.dep1, route.arr1, route.leg1Price)
+        + legLine(route.intCode, to, route.dep2, route.arr2, route.leg2Price);
+    }
+    return legLine(from, to, route.dep, route.arr, route.price);
+  };
+  const out = dir(r.outRoute, currentOrigin, r.destCode);
+  const ret = dir(r.retRoute, r.destCode, currentOrigin);
+  if (!out) return '';
+  const outTotal = r.outPrice;
+  const inTotal = r.inPrice;
+  return `<div class="itin">${out}<div class="leg-sum">${t('legTotal')}: <strong>${fmtEuro(outTotal)}</strong></div>`
+    + (ret ? `<div class="itin-sep"></div>${ret}<div class="leg-sum">${t('legTotal')}: <strong>${fmtEuro(inTotal)}</strong></div>` : '')
+    + `</div>`;
+}
+
+/* Round-trip price calendar: one row per destination, one column per
+   outbound date. Cell colour runs green (cheapest for that destination)
+   to red (most expensive), so the whole grid is readable at a glance. */
+function renderPriceCalendar() {
+  const destCodes = [];
+  const dateSet = new Set();
+  for (const [code, fd] of Object.entries(lastFaresData)) {
+    if (!fd || (Object.keys(fd.outbound || {}).length === 0 && Object.keys(fd.inbound || {}).length === 0)) continue;
+    destCodes.push(code);
+    for (const d of Object.keys(fd.outbound || {})) dateSet.add(d);
+  }
+  if (destCodes.length === 0 || dateSet.size === 0) return '';
+
+  /* cheapest total per destination + outbound date */
+  const rtMap = {};
+  for (const r of lastResults) {
+    if (!r.inDate) continue;
+    const key = r.destCode + '|' + r.outDate;
+    if (!rtMap[key] || r.total < rtMap[key].total) rtMap[key] = { total: r.total, nights: r.nights };
+  }
+
+  const calDates = [...dateSet].sort();
+  const dayNames = I18N.dayNames[currentLang];
+  let html = `<div class="cal-section"><h3>${t('calTitle')}</h3>`
+    + `<div class="cal-legend"><span class="cal-legend-chip cal-legend-cheap"></span>${t('calCheaper')}<span class="cal-legend-chip cal-legend-expensive"></span>${t('calCostlier')}</div>`
+    + `<div class="cal-scroll"><table class="cal-table"><thead><tr><th class="cal-dest">${t('cities')}</th>`
+    + calDates.map(d => {
+        const day = new Date(d + 'T00:00:00').getDay();
+        const cls = day === 0 || day === 6 ? ' cal-date-wknd' : '';
+        return `<th class="cal-date${cls}"><span class="day-name">${dayNames[day]}</span>${fmtDate(d)}</th>`;
+      }).join('')
+    + `</tr></thead><tbody>`;
+
+  for (const code of destCodes) {
+    /* prefer the name the API gave us for this destination */
+    const known = lastResults.find(r => r.destCode === code);
+    const label = cityName(code, (known && known.destName) || code);
+    let min = Infinity, max = -Infinity;
+    for (const d of calDates) {
+      const rt = rtMap[code + '|' + d];
+      if (rt) { if (rt.total < min) min = rt.total; if (rt.total > max) max = rt.total; }
+    }
+    html += `<tr><td class="cal-dest">${label} <span class="code-badge">${code}</span></td>`;
+    for (const d of calDates) {
+      const rt = rtMap[code + '|' + d];
+      if (!rt) { html += `<td class="cal-cell cal-empty">-</td>`; continue; }
+      /* hue 140 = green at the row minimum, 0 = red at the row maximum */
+      let heat = 140;
+      if (max > min) heat = Math.round(140 - 140 * ((rt.total - min) / (max - min)));
+      html += `<td class="cal-cell" style="--heat:${heat}">${Number(rt.total).toFixed(0).replace('.', ',')}&euro;<span class="cal-nights">${t('nightsShort', { n: rt.nights })}</span></td>`;
+    }
+    html += `</tr>`;
+  }
+  return html + `</tbody></table></div></div>`;
+}
+
 function renderResults() {
   const sortBy = document.getElementById('sortBy').value;
   const content = document.getElementById('resultsContent');
@@ -580,7 +674,7 @@ function renderResults() {
   }
 
   if (displayResults.length === 0) {
-    content.innerHTML = `<div class="empty-msg"><div class="big-icon">&#128533;</div><p>${t('noResults')}</p></div>`;
+    content.innerHTML = `<div class="empty-msg"><div class="big-icon">&#128533;</div><p>${t('noResults')}</p><p style="color:var(--text2);font-size:0.9rem;margin-top:8px">${lastResults.length > 0 ? t('tryOtherDates') : t('noApiData')}</p></div>`;
     return;
   }
 
@@ -598,20 +692,23 @@ function renderResults() {
     return `${from} <span class="route-arrow">&rarr;</span> ${to} <span class="route-dim">(${t('directLabel')})</span>`;
   };
 
-  let html = `<div class="table-wrap"><table><thead><tr>${colHeaders}</tr></thead><tbody>`;
+  /* calendar first (round-trip only), then the detailed list */
+  let html = ow ? '' : renderPriceCalendar();
+
+  html += `<div class="table-wrap"><table><thead><tr>${colHeaders}</tr></thead><tbody>`;
   displayResults.forEach((r, i) => {
     const rc = i < 3 ? `rank-${i+1}` : 'rank-other';
     let cell = `<td><span class="rank-badge ${rc}">${i+1}</span></td><td><div class="dest-cell"><span class="code-badge">${r.destCode}</span><span>${cityName(r.destCode, r.destName)}</span></div></td>`;
     if (isMulti) {
       const out = legHtml(r.outRoute, currentOrigin, r.destCode);
       const ret = r.retRoute ? legHtml(r.retRoute, r.destCode, currentOrigin) : '';
-      cell += `<td class="route-cell"><span class="route-leg">${out}</span>${ret ? `<span class="route-leg route-leg-ret">${ret}</span>` : ''}</td>`;
+      cell += `<td class="route-cell"><span class="route-leg">${out}</span>${ret ? `<span class="route-leg route-leg-ret">${ret}</span>` : ''}${itineraryHtml(r)}</td>`;
     }
-    cell += `<td>${fmtDate(r.outDate)}</td>`;
+    cell += `<td>${fmtDate(r.outDate)}${timeSpan(r.outDep, r.outArr)}</td>`;
     if (ow) {
       html += `<tr>${cell}<td class="price-total num">${fmtEuro(r.total)}</td></tr>`;
     } else {
-      html += `<tr>${cell}<td>${fmtDate(r.inDate)}</td><td class="num"><span class="nights-badge">${r.nights}</span></td><td class="price num">${fmtEuro(r.outPrice)}</td><td class="price num">${fmtEuro(r.inPrice)}</td><td class="price-total num">${fmtEuro(r.total)}</td></tr>`;
+      html += `<tr>${cell}<td>${fmtDate(r.inDate)}${timeSpan(r.inDep, r.inArr)}</td><td class="num"><span class="nights-badge">${r.nights}</span></td><td class="price num">${fmtEuro(r.outPrice)}</td><td class="price num">${fmtEuro(r.inPrice)}</td><td class="price-total num">${fmtEuro(r.total)}</td></tr>`;
     }
   });
   html += `</tbody></table></div>`;

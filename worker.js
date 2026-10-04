@@ -146,11 +146,11 @@ self.onmessage = async function(e) {
             const dTo = new Date(dateTo + 'T00:00:00');
             
             if (isMc) {
-                const results = await performMultiDestSearch(origin, destList, dFrom, dTo, minN, maxN, wk, isOneWay, wheelOfFortuneMode, masterAirports, originDestMap);
-                self.postMessage({ type: 'RESULTS', payload: results });
+                const { results, faresData } = await performMultiDestSearch(origin, destList, dFrom, dTo, minN, maxN, wk, isOneWay, wheelOfFortuneMode, masterAirports, originDestMap);
+                self.postMessage({ type: 'RESULTS', payload: results, faresData });
             } else {
-                const results = await performStandardSearch(origin, destList, dFrom, dTo, minN, maxN, wk, isOneWay);
-                self.postMessage({ type: 'RESULTS', payload: results });
+                const { results, faresData } = await performStandardSearch(origin, destList, dFrom, dTo, minN, maxN, wk, isOneWay);
+                self.postMessage({ type: 'RESULTS', payload: results, faresData });
             }
         } catch (err) {
             self.postMessage({ type: 'ERROR', payload: err.message });
@@ -218,7 +218,8 @@ async function performStandardSearch(origin, destList, dFrom, dTo, minN, maxN, w
             }
         }
     }
-    return results.sort((a, b) => a.total - b.total);
+    results.sort((a, b) => a.total - b.total);
+    return { results, faresData };
 }
 
 /* Multi-destination results have to carry the same flat price fields as the
@@ -429,7 +430,18 @@ async function performMultiDestSearch(origin, destList, dFrom, dTo, minN, maxN, 
         }
     }
 
-    return allResults.sort((a, b) => a.total - b.total);
+    allResults.sort((a, b) => a.total - b.total);
+
+    /* The multi-destination scan has no per-day fare maps of its own, so the
+       price calendar is derived from the results. Same shape as the standard
+       search produces: { [destCode]: { outbound: {day:{price,dep,arr}}, inbound: {...} } } */
+    const faresData = {};
+    for (const r of allResults) {
+        if (!faresData[r.destCode]) faresData[r.destCode] = { outbound: {}, inbound: {} };
+        faresData[r.destCode].outbound[r.outDate] = { price: r.outPrice, dep: r.outDep, arr: r.outArr };
+        if (r.inDate) faresData[r.destCode].inbound[r.inDate] = { price: r.inPrice, dep: r.inDep, arr: r.inArr };
+    }
+    return { results: allResults, faresData };
 }
 
 function getMonthsInRange(from, to) {
