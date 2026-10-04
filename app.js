@@ -395,7 +395,7 @@ async function search() {
 
   setCacheDot('loading', t('fetching'));
   const content = document.getElementById('resultsContent');
-  content.innerHTML = `<div class="loading"><div class="spinner"></div><div class="progress-text" id="progText">${t('fetchingReal')}</div><div class="progress-bar"><div class="progress-bar-fill" id="progBar" style="width:0%"></div></div><div class="cancel-row"><button class="btn btn-secondary btn-mini" id="cancelBtn" onclick="cancelSearch()">${t('cancel')}</button></div></div>`;
+  content.innerHTML = `<div class="loading"><div class="plane-loader" aria-hidden="true"><span class="plane-ping"></span><span class="plane-ping plane-ping-late"></span><svg class="plane-icon" viewBox="0 0 24 24"><path fill="url(#planeGrad)" d="M21 16v-2l-8-5V3.5c0-.83-.67-1.5-1.5-1.5S10 2.67 10 3.5V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg></div><div class="progress-text" id="progText">${t('fetchingReal')}</div><div class="progress-bar"><div class="progress-bar-fill" id="progBar" style="width:0%"></div></div><div class="cancel-row"><button class="btn btn-secondary btn-mini" id="cancelBtn" onclick="cancelSearch()">${t('cancel')}</button></div></div>`;
 
   if (!searchWorker) searchWorker = new Worker('worker.js');
   
