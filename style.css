@@ -257,15 +257,15 @@ header .badge::before {
   padding: 8px 0; margin-bottom: 4px;
 }
 .dot {
-  width: 17px; height: 17px; flex-shrink: 0;
+  width: 17px; height: 17px; flex-shrink: 0; padding: 0;
   display: inline-flex; align-items: center; justify-content: center;
   vertical-align: -3px;
 }
 .dot svg { width: 100%; height: 100%; display: block; fill: currentColor; }
-.dot.fresh   { color: var(--green); }
-.dot.stale   { color: var(--gold); }
-.dot.empty   { color: var(--rose); }
-.dot.loading { color: var(--blue); animation: statusBlink 1.7s ease-in-out infinite; }
+.dot.is-fresh   { color: var(--green); }
+.dot.is-stale   { color: var(--gold); }
+.dot.is-empty   { color: var(--rose); }
+.dot.is-loading { color: var(--blue); animation: statusBlink 1.7s ease-in-out infinite; }
 @keyframes statusBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 .cache-info.is-centered { justify-content: center; }
 #proxyInfo.is-centered { margin-bottom: 14px; }

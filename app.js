@@ -515,8 +515,8 @@ function setCacheDot(cls, text) {
   const dot = document.getElementById('cacheDot');
   const tx = document.getElementById('cacheText');
   const pdot = document.getElementById('proxyDot');
-  if (dot) dot.className = `dot ${cls}`;
-  if (pdot) pdot.className = `dot ${cls}`;
+  if (dot) dot.className = `dot is-${cls}`;
+  if (pdot) pdot.className = `dot is-${cls}`;
   if (tx) tx.textContent = text;
   const ps = document.getElementById('proxyStatus');
   if (ps) ps.textContent = text;
