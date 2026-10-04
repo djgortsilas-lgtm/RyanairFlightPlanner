@@ -256,11 +256,17 @@ header .badge::before {
   font-size: 0.84rem; color: var(--text-2);
   padding: 8px 0; margin-bottom: 4px;
 }
-.cache-info .dot { width: 9px; height: 9px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
-.cache-info .dot.fresh    { background: var(--green);  box-shadow: 0 0 0 4px rgba(16,185,129,0.16); }
-.cache-info .dot.stale    { background: var(--gold);   box-shadow: 0 0 0 4px rgba(245,158,11,0.16); }
-.cache-info .dot.loading  { background: var(--blue);   box-shadow: 0 0 0 4px rgba(59,130,246,0.16); animation: pulse 1s infinite; }
-.cache-info .dot.empty    { background: var(--rose);   box-shadow: 0 0 0 4px rgba(244,63,94,0.14); }
+.dot {
+  width: 17px; height: 17px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  vertical-align: -3px;
+}
+.dot svg { width: 100%; height: 100%; display: block; fill: currentColor; }
+.dot.fresh   { color: var(--green); }
+.dot.stale   { color: var(--gold); }
+.dot.empty   { color: var(--rose); }
+.dot.loading { color: var(--blue); animation: statusBlink 1.7s ease-in-out infinite; }
+@keyframes statusBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
 .cache-info.is-centered { justify-content: center; }
 #proxyInfo.is-centered { margin-bottom: 14px; }
 @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: 0.35; transform: scale(0.82); } }
