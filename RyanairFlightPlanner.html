@@ -6,7 +6,7 @@
   <meta name="color-scheme" content="light dark">
   <meta name="description" content="LowcostFlightPlanner — αναζήτηση φθηνών πτήσεων Ryanair, round-trip, one-way και multi-destination.">
   <title>LowcostFlightPlanner - Multi-Destination</title>
-  <link rel="stylesheet" href="style.css?v=filters1">
+  <link rel="stylesheet" href="style.css?v=waitpick1">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><defs><linearGradient id='g' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23d946ef'/><stop offset='.5' stop-color='%23ec4899'/><stop offset='1' stop-color='%23fb923c'/></linearGradient></defs><rect width='64' height='64' rx='15' fill='url(%23g)'/><path d='M51 13 L13 30 L29 36 L35 51 Z' fill='%23fff'/><path d='M51 13 L35 51 L29 36 Z' fill='%23fff' opacity='.72'/></svg>">
 </head>
 <body>
@@ -51,7 +51,7 @@
     <section class="panel filters" id="filtersSection">
       <div class="filter-toolbar">
         <button class="btn btn-secondary btn-mini" id="clearFiltersBtn" onclick="clearAllFilters()" data-i18n="clearFilters">Καθαρισμός Φίλτρων</button>
-        <button class="btn btn-secondary btn-mini" id="filterToggleBtn" onclick="toggleFilters()" data-i18n="hideFilters">Απόκρυψη φίλτρων ▲</button>
+        <button class="btn btn-secondary btn-mini is-hidden" id="filterToggleBtn" onclick="toggleFilters()" data-i18n="hideFilters">Απόκρυψη φίλτρων ▲</button>
       </div>
 
       <div class="filter-grid">
@@ -82,9 +82,9 @@
         <div class="filter-group" id="nightsFilter">
           <label data-i18n="nights">Διανυκτερεύσεις</label>
           <div class="range-row">
-            <input type="number" id="minNights" min="1" max="30" value="2" aria-label="min nights">
+            <select id="minNights" aria-label="min nights"></select>
             <span data-i18n="to">έως</span>
-            <input type="number" id="maxNights" min="1" max="30" value="5" aria-label="max nights">
+            <select id="maxNights" aria-label="max nights"></select>
           </div>
         </div>
 
@@ -149,7 +149,7 @@
             <option value="1-3" data-i18n="wait1to3">1-3 ώρες</option>
             <option value="3-6" data-i18n="wait3to6">3-6 ώρες</option>
             <option value="6-9" data-i18n="wait6to9">6-9 ώρες</option>
-            <option value="9+">9+ ώρες</option>
+            <option value="9-24">9-24 ώρες</option>
           </select>
           <span class="info" id="resultsInfo"></span>
         </div>
@@ -171,6 +171,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=filters1"></script>
+  <script src="app.js?v=waitpick1"></script>
 </body>
 </html>

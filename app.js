@@ -92,7 +92,7 @@ const I18N = {
   wait1to3: { el: '1-3 ώρες', en: '1-3 hours' },
   wait3to6: { el: '3-6 ώρες', en: '3-6 hours' },
   wait6to9: { el: '6-9 ώρες', en: '6-9 hours' },
-  wait9plus: { el: '9+ ώρες', en: '9+ hours' },
+  wait9to24: { el: '9-24 ώρες', en: '9-24 hours' },
   waitAt: { el: 'αναμονή', en: 'wait' },
   depCol: { el: 'Αναχώρηση', en: 'Departure' },
   retCol: { el: 'Επιστροφή', en: 'Return' },
@@ -384,8 +384,8 @@ function updateDestCount() {
 function clearAllFilters() {
     document.getElementById('dateFrom').value = '';
     document.getElementById('dateTo').value = '';
-    document.getElementById('minNights').value = '2';
-    document.getElementById('maxNights').value = '5';
+document.getElementById('minNights').value = '';
+  document.getElementById('maxNights').value = '';
     document.getElementById('weekendOnly').checked = false;
     selectedDestinations.clear();
     enforceDateOrder();
@@ -418,16 +418,30 @@ function getDateRangeNights() {
   return diff < 1 ? null : diff;
 }
 
+/* Nights are chosen from dropdowns rather than typed, which is what mobile
+   needs. The options are rebuilt whenever the allowed range changes, so a
+   45-day date window offers 45 nights without the markup hard-coding them. */
+const DEFAULT_MIN_NIGHTS = 2;
+const DEFAULT_MAX_NIGHTS = 5;
+const MAX_NIGHTS_OPTIONS = 365;
+
+function buildNightOptions(el, cap, value) {
+  if (!el) return;
+  const limit = Math.max(1, Math.min(MAX_NIGHTS_OPTIONS, cap));
+  let html = '';
+  for (let n = 1; n <= limit; n++) html += `<option value="${n}">${n}</option>`;
+  el.innerHTML = html;
+  el.value = String(Math.max(1, Math.min(limit, value)));
+}
+
 function syncNightsFromDates() {
   const diff = getDateRangeNights();
   if (diff === null) return;
   const minEl = document.getElementById('minNights');
   const maxEl = document.getElementById('maxNights');
   if (!minEl || !maxEl) return;
-  minEl.max = String(diff);
-  maxEl.max = String(diff);
-  minEl.value = String(diff);
-  maxEl.value = String(diff);
+  buildNightOptions(minEl, diff, diff);
+  buildNightOptions(maxEl, diff, diff);
 }
 
 function clampNightsInputs() {
@@ -436,16 +450,14 @@ function clampNightsInputs() {
   const minEl = document.getElementById('minNights');
   const maxEl = document.getElementById('maxNights');
   if (!minEl || !maxEl) return;
-  minEl.max = String(cap);
-  maxEl.max = String(cap);
   let minN = parseInt(minEl.value, 10);
   let maxN = parseInt(maxEl.value, 10);
-  if (isNaN(minN)) minN = 1;
-  if (isNaN(maxN)) maxN = minN;
+  if (isNaN(minN)) minN = DEFAULT_MIN_NIGHTS;
+  if (isNaN(maxN)) maxN = DEFAULT_MAX_NIGHTS;
   minN = Math.max(1, Math.min(cap, minN));
   maxN = Math.max(minN, Math.min(cap, maxN));
-  minEl.value = String(minN);
-  maxEl.value = String(maxN);
+  buildNightOptions(minEl, cap, minN);
+  buildNightOptions(maxEl, cap, maxN);
 }
 
 function readNightsRange() {
@@ -453,8 +465,8 @@ function readNightsRange() {
   const cap = diff === null ? 30 : diff;
   let minN = parseInt(document.getElementById('minNights')?.value, 10);
   let maxN = parseInt(document.getElementById('maxNights')?.value, 10);
-  if (isNaN(minN)) minN = 2;
-  if (isNaN(maxN)) maxN = 5;
+  if (isNaN(minN)) minN = DEFAULT_MIN_NIGHTS;
+  if (isNaN(maxN)) maxN = DEFAULT_MAX_NIGHTS;
   minN = Math.max(1, Math.min(cap, minN));
   maxN = Math.max(minN, Math.min(cap, maxN));
   return { minN, maxN };
@@ -597,25 +609,28 @@ function timeSpan(dep, arr) {
 }
 
 /* One leg line inside a detailed multi-destination itinerary. */
-function legLine(from, to, dep, arr, price, wait) {
+function legLine(from, to, date, dep, arr, price, wait) {
   const p = price == null ? '' : `<span class="leg-price">${fmtEuro(price)}</span>`;
   const w = wait == null ? '' : `<span class="leg-wait">${t('waitAt')} ${fmtWait(wait)}</span>`;
-  return `<div class="leg-line"><span class="leg-route">${from} <span class="route-arrow">&rarr;</span> ${to}</span><span class="leg-time">${timeSpan(dep, arr)}</span>${w}${p}</div>`;
+  const d = date ? `<span class="leg-date">${fmtDate(date)}</span>` : '';
+  return `<div class="leg-line"><span class="leg-route">${from} <span class="route-arrow">&rarr;</span> ${to}</span>${d}<span class="leg-time">${timeSpan(dep, arr)}</span>${w}${p}</div>`;
 }
 
-/* Detailed itinerary for a multi-destination row: every leg, its times and
-   its own price, for the outbound and the return direction. */
+/* Detailed itinerary for a multi-destination row: every leg with its date,
+   times and price, for the outbound and the return direction. A connection
+   can land on the next day, so leg dates come from the route itself rather
+   than from the row's single outDate / inDate. */
 function itineraryHtml(r) {
-  const dir = (route, from, to, wait) => {
+  const dir = (route, from, to, leg1Date, leg2Date, wait) => {
     if (!route) return '';
     if (route.intCode) {
-      return legLine(from, route.intCode, route.dep1, route.arr1, route.leg1Price, wait)
-        + legLine(route.intCode, to, route.dep2, route.arr2, route.leg2Price, null);
+      return legLine(from, route.intCode, leg1Date, route.dep1, route.arr1, route.leg1Price, wait)
+        + legLine(route.intCode, to, leg2Date, route.dep2, route.arr2, route.leg2Price, null);
     }
-    return legLine(from, to, route.dep, route.arr, route.price, null);
+    return legLine(from, to, leg1Date, route.dep, route.arr, route.price, null);
   };
-  const out = dir(r.outRoute, currentOrigin, r.destCode, r.outWait);
-  const ret = dir(r.retRoute, r.destCode, currentOrigin, r.retWait);
+  const out = dir(r.outRoute, currentOrigin, r.destCode, r.outDate, (r.outRoute && r.outRoute.arrDate) || r.outDate, r.outWait);
+  const ret = dir(r.retRoute, r.destCode, currentOrigin, (r.retRoute && r.retRoute.depDate) || r.inDate, r.inDate, r.retWait);
   if (!out) return '';
   const outTotal = r.outPrice;
   const inTotal = r.inPrice;
@@ -690,6 +705,8 @@ function renderResults() {
   applyResultFilters(ow);
 
   let displayResults = [...lastResults];
+  /* A connection beyond MAX_WAIT_HOURS is not an itinerary anybody can use. */
+  displayResults = displayResults.filter(r => (r.maxWait == null ? 0 : Number(r.maxWait)) <= MAX_WAIT_HOURS);
   if (simpleFilterNights !== 'ALL' && !ow) displayResults = displayResults.filter(r => String(r.nights) === simpleFilterNights);
   if (simpleFilterCity !== 'ALL') displayResults = displayResults.filter(r => r.destCode === simpleFilterCity);
   if (simpleFilterWait !== 'ALL') displayResults = displayResults.filter(r => waitInBand(r.maxWait, simpleFilterWait));
@@ -779,7 +796,11 @@ function filterSimpleWait() {
   renderResults();
 }
 
-/* Does a layover fall inside the selected 1-3 / 3-6 / 6-9 / 9+ band? */
+/* A connection longer than this is not a usable itinerary, so those rows
+   are dropped whatever the filter says. */
+const MAX_WAIT_HOURS = 24;
+
+/* Does a layover fall inside the selected 1-3 / 3-6 / 6-9 / 9-24 band? */
 function waitInBand(hours, band) {
   if (band === 'ALL') return true;
   if (hours == null) return false;
@@ -787,7 +808,7 @@ function waitInBand(hours, band) {
   if (band === '1-3') return h >= 1 && h < 3;
   if (band === '3-6') return h >= 3 && h < 6;
   if (band === '6-9') return h >= 6 && h < 9;
-  if (band === '9+') return h >= 9;
+  if (band === '9-24') return h >= 9 && h <= MAX_WAIT_HOURS;
   return true;
 }
 
@@ -845,7 +866,7 @@ function applyResultFilters(ow) {
   if (waitSel) {
     if (hasLayovers) {
       waitSel.innerHTML = `<option value="ALL">${t('waitAll')}</option>`
-        + [['1-3', 'wait1to3'], ['3-6', 'wait3to6'], ['6-9', 'wait6to9'], ['9+', 'wait9plus']]
+        + [['1-3', 'wait1to3'], ['3-6', 'wait3to6'], ['6-9', 'wait6to9'], ['9-24', 'wait9to24']]
           .map(([v, k]) => `<option value="${v}" ${simpleFilterWait === v ? 'selected' : ''}>${t(k)}</option>`).join('');
       waitSel.classList.remove('is-hidden');
     } else {
@@ -896,6 +917,7 @@ function initApp() {
   if (minEl) minEl.addEventListener('change', clampNightsInputs);
   if (maxEl) maxEl.addEventListener('change', clampNightsInputs);
   enforceDateOrder();
+  clampNightsInputs();
   setCacheDot('loading', t('init'));
   loadAppData();
   onTripTypeChange();

@@ -601,6 +601,7 @@ td.num, th.num { text-align: right; }
 .leg-line { display: flex; align-items: baseline; gap: 8px; font-size: 0.75rem; padding: 2px 0; }
 .leg-route { font-weight: 700; color: var(--text); }
 .leg-time { color: var(--text-2); font-weight: 600; font-size: 0.72rem; }
+.leg-date { color: var(--text-2); font-weight: 700; font-size: 0.7rem; white-space: nowrap; }
 .leg-wait { color: var(--accent); font-weight: 700; font-size: 0.7rem; white-space: nowrap; }
 .leg-price { margin-left: auto; font-weight: 700; color: var(--text); }
 .leg-sum { font-size: 0.72rem; color: var(--text-2); text-align: right; padding-top: 3px; border-top: 1px dashed var(--border-2); margin-top: 3px; }
