@@ -601,6 +601,7 @@ td.num, th.num { text-align: right; }
 .leg-line { display: flex; align-items: baseline; gap: 8px; font-size: 0.75rem; padding: 2px 0; }
 .leg-route { font-weight: 700; color: var(--text); }
 .leg-time { color: var(--text-2); font-weight: 600; font-size: 0.72rem; }
+.leg-wait { color: var(--accent); font-weight: 700; font-size: 0.7rem; white-space: nowrap; }
 .leg-price { margin-left: auto; font-weight: 700; color: var(--text); }
 .leg-sum { font-size: 0.72rem; color: var(--text-2); text-align: right; padding-top: 3px; border-top: 1px dashed var(--border-2); margin-top: 3px; }
 .leg-sum strong { color: var(--text); }
@@ -621,7 +622,7 @@ td.num, th.num { text-align: right; }
 .cal-table .cal-date { font-size: 0.68rem; line-height: 1.35; }
 .cal-table .cal-date .day-name { display: block; font-size: 0.6rem; font-weight: 700; letter-spacing: 0.5px; }
 .cal-table .cal-date-wknd { color: #dc2626; }
-.cal-cell { font-weight: 700; font-size: 0.82rem; background: hsl(var(--heat, 140) 62% 93%); }
+.cal-cell { font-weight: 700; font-size: 0.82rem; }
 .cal-nights { display: block; font-size: 0.68rem; color: var(--text-2); font-weight: 600; line-height: 1; }
 .cal-empty { color: var(--text-3); font-weight: 400; background: transparent; }
 .via-badge {
@@ -807,7 +808,7 @@ td.num, th.num { text-align: right; }
 .cal-table .cal-date-wknd { color: #be123c; }
 .cal-cell { font-weight: 700; line-height: 1.6; font-size: 0.9rem; }
 .cal-nights { display: block; font-size: 0.72rem; color: #0891b2; font-weight: 700; line-height: 1; }
-.cal-min { background: #fef3c7 !important; }
+.cal-min { background: #dcfce7 !important; }
 .cal-max { background: #fee2e2 !important; }
 .cal-empty { color: var(--text-3); font-weight: 400; }
 
@@ -929,8 +930,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focu
   .code-badge { color: #ddd6fe; border-color: rgba(139,92,246,0.45); }
   .via-badge { color: #f9a8d4; border-color: rgba(236,72,153,0.45); background: linear-gradient(135deg, rgba(236,72,153,0.24), rgba(251,146,60,0.2)); }
 .time-span { color: #34d399; }
-.cal-cell { background: hsl(var(--heat, 140) 45% 20%); }
-.cal-legend-cheap { background: hsl(140 45% 20%); }
+.cal-legend-cheap { background: #dcfce7; }
 .cal-legend-expensive { background: hsl(0 50% 24%); }
   .price { color: #67e8f9; background: rgba(6,182,212,0.14); }
   .nights-badge { color: #ddd6fe; border-color: #6d28d9; background: linear-gradient(135deg, rgba(139,92,246,0.22), rgba(6,182,212,0.18)); }
@@ -942,7 +942,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focu
   .mc-card .mc-leg .mc-price, .mc-card .mc-via-route { color: #6ee7b7; }
   .cal-table .cal-dest { color: #ddd6fe; }
   .cal-table .cal-date-wknd { color: #fda4af; }
-  .cal-min { background: #78350f !important; }
+  .cal-min { background: #14532d !important; }
   .cal-max { background: #7f1d1d !important; }
   .help-modal-overlay { background: rgba(3, 5, 14, 0.72); }
 }

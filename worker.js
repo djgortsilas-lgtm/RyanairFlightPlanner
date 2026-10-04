@@ -237,6 +237,11 @@ function packMultiDest(destCode, destName, outDate, inDate, nights, outRoute, re
         outArr: outRoute ? (outRoute.arr2 || outRoute.arr || null) : null,
         inDep: retRoute ? (retRoute.dep1 || retRoute.dep || null) : null,
         inArr: retRoute ? (retRoute.arr2 || retRoute.arr || null) : null,
+        /* waiting time at the connecting airport, per direction plus the
+           worst of the two, so the results can be filtered by layover */
+        outWait: outRoute ? getLegWait(outRoute) : null,
+        retWait: retRoute ? getLegWait(retRoute) : null,
+        maxWait: getRouteMaxWait(outRoute, retRoute),
         total: outP + retP
     };
 }

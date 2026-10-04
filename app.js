@@ -88,6 +88,12 @@ const I18N = {
   legTotal: { el: 'Σύνολο', en: 'Total' },
   calCheaper: { el: 'Φθηνότερο', en: 'Cheapest' },
   calCostlier: { el: 'Ακριβότερο', en: 'Most expensive' },
+  waitAll: { el: 'Όλες οι αναμονές', en: 'All waiting times' },
+  wait1to3: { el: '1-3 ώρες', en: '1-3 hours' },
+  wait3to6: { el: '3-6 ώρες', en: '3-6 hours' },
+  wait6to9: { el: '6-9 ώρες', en: '6-9 hours' },
+  wait9plus: { el: '9+ ώρες', en: '9+ hours' },
+  waitAt: { el: 'αναμονή', en: 'wait' },
   depCol: { el: 'Αναχώρηση', en: 'Departure' },
   retCol: { el: 'Επιστροφή', en: 'Return' },
   nightsCol: { el: 'Διαν.', en: 'Nts' },
@@ -150,6 +156,7 @@ let wheelFilterNights = 'ALL';
 let wheelFilterWait = 'ALL';
 let simpleFilterNights = 'ALL';
 let simpleFilterCity = 'ALL';
+let simpleFilterWait = 'ALL';
 
 /* --- Data Handling --- */
 async function loadAppData() {
@@ -590,24 +597,25 @@ function timeSpan(dep, arr) {
 }
 
 /* One leg line inside a detailed multi-destination itinerary. */
-function legLine(from, to, dep, arr, price) {
+function legLine(from, to, dep, arr, price, wait) {
   const p = price == null ? '' : `<span class="leg-price">${fmtEuro(price)}</span>`;
-  return `<div class="leg-line"><span class="leg-route">${from} <span class="route-arrow">&rarr;</span> ${to}</span><span class="leg-time">${timeSpan(dep, arr)}</span>${p}</div>`;
+  const w = wait == null ? '' : `<span class="leg-wait">${t('waitAt')} ${fmtWait(wait)}</span>`;
+  return `<div class="leg-line"><span class="leg-route">${from} <span class="route-arrow">&rarr;</span> ${to}</span><span class="leg-time">${timeSpan(dep, arr)}</span>${w}${p}</div>`;
 }
 
 /* Detailed itinerary for a multi-destination row: every leg, its times and
    its own price, for the outbound and the return direction. */
 function itineraryHtml(r) {
-  const dir = (route, from, to) => {
+  const dir = (route, from, to, wait) => {
     if (!route) return '';
     if (route.intCode) {
-      return legLine(from, route.intCode, route.dep1, route.arr1, route.leg1Price)
-        + legLine(route.intCode, to, route.dep2, route.arr2, route.leg2Price);
+      return legLine(from, route.intCode, route.dep1, route.arr1, route.leg1Price, wait)
+        + legLine(route.intCode, to, route.dep2, route.arr2, route.leg2Price, null);
     }
-    return legLine(from, to, route.dep, route.arr, route.price);
+    return legLine(from, to, route.dep, route.arr, route.price, null);
   };
-  const out = dir(r.outRoute, currentOrigin, r.destCode);
-  const ret = dir(r.retRoute, r.destCode, currentOrigin);
+  const out = dir(r.outRoute, currentOrigin, r.destCode, r.outWait);
+  const ret = dir(r.retRoute, r.destCode, currentOrigin, r.retWait);
   if (!out) return '';
   const outTotal = r.outPrice;
   const inTotal = r.inPrice;
@@ -617,12 +625,14 @@ function itineraryHtml(r) {
 }
 
 /* Round-trip price calendar: one row per destination, one column per
-   outbound date. Cell colour runs green (cheapest for that destination)
-   to red (most expensive), so the whole grid is readable at a glance. */
+   outbound date. Only the cheapest cell of each destination is green and
+   only the most expensive is red; everything in between stays neutral, so
+   the two extremes stand out instead of drowning in a gradient. */
 function renderPriceCalendar() {
   const destCodes = [];
   const dateSet = new Set();
   for (const [code, fd] of Object.entries(lastFaresData)) {
+    if (simpleFilterCity !== 'ALL' && code !== simpleFilterCity) continue;
     if (!fd || (Object.keys(fd.outbound || {}).length === 0 && Object.keys(fd.inbound || {}).length === 0)) continue;
     destCodes.push(code);
     for (const d of Object.keys(fd.outbound || {})) dateSet.add(d);
@@ -662,10 +672,10 @@ function renderPriceCalendar() {
     for (const d of calDates) {
       const rt = rtMap[code + '|' + d];
       if (!rt) { html += `<td class="cal-cell cal-empty">-</td>`; continue; }
-      /* hue 140 = green at the row minimum, 0 = red at the row maximum */
-      let heat = 140;
-      if (max > min) heat = Math.round(140 - 140 * ((rt.total - min) / (max - min)));
-      html += `<td class="cal-cell" style="--heat:${heat}">${Number(rt.total).toFixed(0).replace('.', ',')}&euro;<span class="cal-nights">${t('nightsShort', { n: rt.nights })}</span></td>`;
+      let cls = 'cal-cell';
+      if (min < Infinity && rt.total === min) cls += ' cal-min';
+      else if (max > -Infinity && min !== max && rt.total === max) cls += ' cal-max';
+      html += `<td class="${cls}">${Number(rt.total).toFixed(0).replace('.', ',')}&euro;<span class="cal-nights">${t('nightsShort', { n: rt.nights })}</span></td>`;
     }
     html += `</tr>`;
   }
@@ -675,8 +685,22 @@ function renderPriceCalendar() {
 function renderResults() {
   const sortBy = document.getElementById('sortBy').value;
   const content = document.getElementById('resultsContent');
+  const ow = lastResults.length > 0 && lastResults[0].inDate === null;
+
+  applyResultFilters(ow);
+
   let displayResults = [...lastResults];
-  const ow = displayResults.length > 0 && displayResults[0].inDate === null;
+  if (simpleFilterNights !== 'ALL' && !ow) displayResults = displayResults.filter(r => String(r.nights) === simpleFilterNights);
+  if (simpleFilterCity !== 'ALL') displayResults = displayResults.filter(r => r.destCode === simpleFilterCity);
+  if (simpleFilterWait !== 'ALL') displayResults = displayResults.filter(r => waitInBand(r.maxWait, simpleFilterWait));
+
+  const info = document.getElementById('resultsInfo');
+  if (info) {
+    const filtered = displayResults.length !== lastResults.length;
+    info.textContent = filtered
+      ? `${displayResults.length} / ${lastResults.length}`
+      : `${lastResults.length}`;
+  }
 
   if (sortBy === 'date') {
     displayResults.sort((a, b) => a.outDate.localeCompare(b.outDate) || a.total - b.total);
@@ -685,7 +709,8 @@ function renderResults() {
   }
 
   if (displayResults.length === 0) {
-    content.innerHTML = `<div class="empty-msg"><div class="big-icon">&#128533;</div><p>${t('noResults')}</p><p style="color:var(--text2);font-size:0.9rem;margin-top:8px">${lastResults.length > 0 ? t('tryOtherDates') : t('noApiData')}</p></div>`;
+    const nothingMatched = lastResults.length > 0;
+    content.innerHTML = `<div class="empty-msg"><div class="big-icon">&#128533;</div><p>${t('noResults')}</p><p style="color:var(--text2);font-size:0.9rem;margin-top:8px">${nothingMatched ? t('tryOtherDates') : t('noApiData')}</p></div>`;
     return;
   }
 
@@ -738,8 +763,97 @@ function fmtEuro(n) {
 
 function reSortResults() { renderResults(); }
 
-function filterSimpleNights() { renderResults(); }
-function filterSimpleCity() { renderResults(); }
+function filterSimpleNights() {
+  const sel = document.getElementById('simpleNightsFilter');
+  if (sel) simpleFilterNights = sel.value;
+  renderResults();
+}
+function filterSimpleCity() {
+  const sel = document.getElementById('simpleCityFilter');
+  if (sel) simpleFilterCity = sel.value;
+  renderResults();
+}
+function filterSimpleWait() {
+  const sel = document.getElementById('simpleWaitFilter');
+  if (sel) simpleFilterWait = sel.value;
+  renderResults();
+}
+
+/* Does a layover fall inside the selected 1-3 / 3-6 / 6-9 / 9+ band? */
+function waitInBand(hours, band) {
+  if (band === 'ALL') return true;
+  if (hours == null) return false;
+  const h = Number(hours);
+  if (band === '1-3') return h >= 1 && h < 3;
+  if (band === '3-6') return h >= 3 && h < 6;
+  if (band === '6-9') return h >= 6 && h < 9;
+  if (band === '9+') return h >= 9;
+  return true;
+}
+
+function fmtWait(h) {
+  if (h == null) return '';
+  const hrs = Math.floor(h);
+  const mins = Math.round((h - hrs) * 60);
+  return hrs > 0 ? `${hrs}h${mins ? ' ' + mins + 'm' : ''}` : `${mins}m`;
+}
+
+/* Populate the results dropdowns and apply them. Nights and city apply to
+   every search; the layover band only makes sense when the results
+   actually contain connections, so it stays hidden otherwise. */
+function applyResultFilters(ow) {
+  const nightsSel = document.getElementById('simpleNightsFilter');
+  const citySel = document.getElementById('simpleCityFilter');
+  const waitSel = document.getElementById('simpleWaitFilter');
+
+  const nightsSet = [...new Set(lastResults.map(r => r.nights).filter(n => n > 0))].sort((a, b) => a - b);
+  if (nightsSel) {
+    if (!ow && nightsSet.length > 0) {
+      if (simpleFilterNights !== 'ALL' && !nightsSet.includes(Number(simpleFilterNights))) simpleFilterNights = 'ALL';
+      nightsSel.innerHTML = `<option value="ALL">${t('wheelAllNights')}</option>`
+        + nightsSet.map(n => `<option value="${n}" ${simpleFilterNights === String(n) ? 'selected' : ''}>${t('nightsShort', { n })}</option>`).join('');
+      nightsSel.classList.remove('is-hidden');
+    } else {
+      nightsSel.classList.add('is-hidden');
+      simpleFilterNights = 'ALL';
+    }
+  }
+
+  if (citySel) {
+    const codes = [...new Set(lastResults.map(r => r.destCode))];
+    if (codes.length > 1) {
+      const sorted = [...codes].sort((a, b) => {
+        const ra = lastResults.find(r => r.destCode === a);
+        const rb = lastResults.find(r => r.destCode === b);
+        return cityName(a, (ra && ra.destName) || a).toLowerCase().localeCompare(cityName(b, (rb && rb.destName) || b).toLowerCase());
+      });
+      if (simpleFilterCity !== 'ALL' && !codes.includes(simpleFilterCity)) simpleFilterCity = 'ALL';
+      citySel.innerHTML = `<option value="ALL">${t('cityAll')} (${codes.length})</option>`
+        + sorted.map(c => {
+          const rr = lastResults.find(r => r.destCode === c);
+          const nm = cityName(c, (rr && rr.destName) || c);
+          return `<option value="${c}" ${simpleFilterCity === c ? 'selected' : ''}>${nm} (${c})</option>`;
+        }).join('');
+      citySel.classList.remove('is-hidden');
+    } else {
+      citySel.classList.add('is-hidden');
+      simpleFilterCity = 'ALL';
+    }
+  }
+
+  const hasLayovers = lastResults.some(r => r.maxWait != null && r.maxWait > 0);
+  if (waitSel) {
+    if (hasLayovers) {
+      waitSel.innerHTML = `<option value="ALL">${t('waitAll')}</option>`
+        + [['1-3', 'wait1to3'], ['3-6', 'wait3to6'], ['6-9', 'wait6to9'], ['9+', 'wait9plus']]
+          .map(([v, k]) => `<option value="${v}" ${simpleFilterWait === v ? 'selected' : ''}>${t(k)}</option>`).join('');
+      waitSel.classList.remove('is-hidden');
+    } else {
+      waitSel.classList.add('is-hidden');
+      simpleFilterWait = 'ALL';
+    }
+  }
+}
 
 /* --- UI Helpers --- */
 function onTripTypeChange() {
