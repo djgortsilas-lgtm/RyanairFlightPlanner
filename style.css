@@ -650,7 +650,7 @@ td.num, th.num { text-align: right; }
   font-weight: 800; font-size: 0.78rem; letter-spacing: 0.5px; white-space: nowrap;
 }
 /* Prices keep their colour but are dark enough to actually read:
-   #0e7490 on white is 5.4:1, the old #0891b2 was only 3.7:1. */
+   #0d6c86 on white is 6.0:1, the old #0891b2 was only 3.7:1. */
 .price {
   font-weight: 700; font-size: 0.95rem; color: var(--teal-ink);
   padding: 2px 9px; border-radius: 7px;
@@ -807,7 +807,7 @@ td.num, th.num { text-align: right; }
 }
 .mc-card .mc-strikethrough { text-decoration: line-through; color: var(--text-3); }
 .mc-card .mc-via-route { color: var(--green-ink); font-weight: 700; }
-.mc-card .mc-saved { color: #0891b2; font-weight: 700; }
+.mc-card .mc-saved { color: var(--teal-ink); font-weight: 700; }
 
 /* ---------- 16. Price calendar (kept) ---------- */
 .cal-section { margin-top: 22px; }
