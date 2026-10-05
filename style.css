@@ -24,7 +24,7 @@
   /* Readable steps of the accent colours, for text. The spectrum above is
      tuned for fills and borders, but as text on white those same values sit
      at 2.5-3.8:1. These darker steps clear 4.5:1. */
-  --teal-ink:  #0e7490;
+  --teal-ink:  #0d6c86;
   --green-ink: #047857;
   --rose-ink:  #be185d;
   --fuchsia:#d946ef;
@@ -36,7 +36,7 @@
   --surface-3: #eceffb;
   --text:      #16182f;
   --text-2:    #565c7d;
-  --text-3:    #6b7192;
+  --text-3:    #626786;
   --border:    #e4e7f8;
   --border-2:  #cbd2ee;
 
@@ -821,7 +821,7 @@ td.num, th.num { text-align: right; }
 .cal-table .cal-date .day-name { display: block; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
 .cal-table .cal-date-wknd { color: #be123c; }
 .cal-cell { font-weight: 700; line-height: 1.6; font-size: 0.9rem; }
-.cal-nights { display: block; font-size: 0.72rem; color: #0891b2; font-weight: 700; line-height: 1; }
+.cal-nights { display: block; font-size: 0.72rem; color: var(--teal-ink); font-weight: 700; line-height: 1; }
 .cal-min { background: #dcfce7 !important; }
 .cal-max { background: #fee2e2 !important; }
 .cal-empty { color: var(--text-3); font-weight: 400; }
@@ -892,10 +892,10 @@ button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focu
     --surface-3: #262c4a;
     --text:      #eef0ff;
   --text-2:    #a8aecd;
-  --text-3:    #7f86a6;
-  --teal-ink:  #67e8f9;
-  --green-ink: #6ee7b7;
-  --rose-ink:  #f0abfc;
+    --text-3:    #949bba;
+    --teal-ink:  #67e8f9;
+    --green-ink: #6ee7b7;
+    --rose-ink:  #f0abfc;
     --border:    #2c3352;
     --border-2:  #3c4470;
 
