@@ -806,7 +806,7 @@ td.num, th.num { text-align: right; }
   padding: 9px 14px; background: var(--surface-3); border-radius: 11px;
 }
 .mc-card .mc-strikethrough { text-decoration: line-through; color: var(--text-3); }
-.mc-card .mc-via-route { color: #059669; font-weight: 700; }
+.mc-card .mc-via-route { color: var(--green-ink); font-weight: 700; }
 .mc-card .mc-saved { color: #0891b2; font-weight: 700; }
 
 /* ---------- 16. Price calendar (kept) ---------- */
@@ -950,14 +950,14 @@ button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focu
 .time-span { color: #34d399; }
 .cal-legend-cheap { background: #dcfce7; }
 .cal-legend-expensive { background: hsl(0 50% 24%); }
-  .price { color: #67e8f9; background: rgba(6,182,212,0.14); }
+  .price { background-color: rgba(6,182,212,0.14); }
   .nights-badge { color: #ddd6fe; border-color: #6d28d9; background: linear-gradient(135deg, rgba(139,92,246,0.22), rgba(6,182,212,0.18)); }
   th { color: #ddd6fe; background: linear-gradient(160deg, #262c4a, #1d223c 60%, #172b3a); border-bottom-color: #4c1d95; }
   tbody tr:nth-child(even) td { background-color: rgba(139,92,246,0.05); }
   tbody tr:hover td { background-image: linear-gradient(90deg, rgba(217,70,239,0.14), rgba(6,182,212,0.12)); }
   .error-msg { color: #fecdd3; background: linear-gradient(135deg, rgba(244,63,94,0.18), rgba(236,72,153,0.14)); border-color: rgba(244,63,94,0.4); }
   .mc-label { color: #f0abfc; }
-  .mc-card .mc-leg .mc-price, .mc-card .mc-via-route { color: #6ee7b7; }
+  .mc-card .mc-via-route { color: var(--green-ink); }
   .cal-table .cal-dest { color: #ddd6fe; }
   .cal-table .cal-date-wknd { color: #fda4af; }
   .cal-min { background: #14532d !important; }
