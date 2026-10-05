@@ -20,6 +20,13 @@
   --coral:  #f97316;
   --rose:   #f43f5e;
   --pink:   #ec4899;
+
+  /* Readable steps of the accent colours, for text. The spectrum above is
+     tuned for fills and borders, but as text on white those same values sit
+     at 2.5-3.8:1. These darker steps clear 4.5:1. */
+  --teal-ink:  #0e7490;
+  --green-ink: #047857;
+  --rose-ink:  #be185d;
   --fuchsia:#d946ef;
 
   /* Semantic surfaces */
@@ -29,7 +36,7 @@
   --surface-3: #eceffb;
   --text:      #16182f;
   --text-2:    #565c7d;
-  --text-3:    #8b90ab;
+  --text-3:    #6b7192;
   --border:    #e4e7f8;
   --border-2:  #cbd2ee;
 
@@ -194,6 +201,7 @@ header h1 {
   line-height: 1.1;
   background: linear-gradient(100deg, #d946ef, #ec4899 20%, #fb923c 40%, #facc15 55%, #06b6d4 72%, #8b5cf6 90%);
   background-size: 240% auto;
+  color: #d946ef;
   -webkit-background-clip: text; -webkit-text-fill-color: transparent;
   background-clip: text;
   filter: drop-shadow(0 3px 10px rgba(236, 72, 153, 0.22));
@@ -581,8 +589,11 @@ th {
 }
 td { padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 0.9rem; }
 tbody tr { transition: background .15s; }
-tbody tr:nth-child(even) td { background: rgba(139,92,246,0.03); }
-tbody tr:hover td { background: linear-gradient(90deg, rgba(217,70,239,0.08), rgba(6,182,212,0.08)); }
+/* background-color / background-image rather than the background shorthand:
+   the shorthand resets background-clip on the cell, which would wipe the
+   gradient off the price text and leave it invisible. */
+  tbody tr:nth-child(even) td { background-color: rgba(139,92,246,0.03); }
+  tbody tr:hover td { background-image: linear-gradient(90deg, rgba(217,70,239,0.08), rgba(6,182,212,0.08)); }
 tbody tr:last-child td { border-bottom: none; }
 td.num, th.num { text-align: right; }
 
@@ -594,7 +605,7 @@ td.num, th.num { text-align: right; }
 .route-dim { color: var(--text-3); font-weight: 500; font-size: 0.74rem; }
 
 /* flight times next to the date in the Departure / Return columns */
-.time-span { display: inline-block; margin-left: 6px; font-size: 0.74rem; font-weight: 700; color: var(--green); white-space: nowrap; }
+.time-span { display: inline-block; margin-left: 6px; font-size: 0.74rem; font-weight: 700; color: var(--green-ink); white-space: nowrap; }
 
 /* detailed multi-destination itinerary, nested under the Route cell */
 .itin { margin-top: 8px; padding: 8px 10px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--border); min-width: 250px; white-space: normal; }
@@ -638,16 +649,20 @@ td.num, th.num { text-align: right; }
   color: #6d28d9; border: 1px solid rgba(139,92,246,0.3);
   font-weight: 800; font-size: 0.78rem; letter-spacing: 0.5px; white-space: nowrap;
 }
+/* Prices keep their colour but are dark enough to actually read:
+   #0e7490 on white is 5.4:1, the old #0891b2 was only 3.7:1. */
 .price {
-  font-weight: 700; font-size: 0.95rem; color: #0891b2;
+  font-weight: 700; font-size: 0.95rem; color: var(--teal-ink);
   padding: 2px 9px; border-radius: 7px;
-  background: rgba(6,182,212,0.09);
+  background: rgba(14,116,144,0.09);
 }
+/* Solid on purpose. A gradient clipped to the text needs
+   background-clip:text, and any `background` shorthand on the cell wipes it,
+   which made the total disappear on every second row. A plain colour cannot
+   be clobbered that way: #be185d is 6.0:1 on white. */
 .price-total {
   font-weight: 800; font-size: 1.08rem;
-  background: linear-gradient(135deg, #ec4899, #fb923c);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: var(--rose-ink);
 }
 .nights-badge {
   display: inline-block; padding: 3px 11px; border-radius: 999px;
@@ -782,12 +797,10 @@ td.num, th.num { text-align: right; }
 .mc-card .mc-leg.mc-mid { border: 1.5px dashed var(--cyan); background: rgba(6,182,212,0.07); }
 .mc-card .mc-leg .mc-route { font-weight: 700; font-size: 0.9rem; }
 .mc-card .mc-leg .mc-date { color: var(--text-2); font-size: 0.8rem; }
-.mc-card .mc-leg .mc-price { font-weight: 800; color: #059669; font-size: 0.95rem; }
+.mc-card .mc-leg .mc-price { font-weight: 800; color: var(--green-ink); font-size: 0.95rem; }
 .mc-card .mc-arrow { color: var(--text-3); font-size: 0.85rem; line-height: 1; }
 .mc-card .mc-total { text-align: center; margin-top: 13px; font-size: 1.05rem; color: var(--text-2); }
-.mc-card .mc-total strong { font-size: 1.25rem; font-weight: 800;
-  background: linear-gradient(135deg, #ec4899, #fb923c);
-  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.mc-card .mc-total strong { font-size: 1.25rem; font-weight: 800; color: var(--rose-ink); }
 .mc-card .mc-compare {
   text-align: center; margin-top: 13px; font-size: 0.85rem; color: var(--text-2);
   padding: 9px 14px; background: var(--surface-3); border-radius: 11px;
@@ -835,6 +848,7 @@ td.num, th.num { text-align: right; }
   display: flex; align-items: center; gap: 10px;
   font-size: 1.3rem; margin-bottom: 16px; padding-right: 40px;
   background: var(--sunset); background-size: 200% auto;
+  color: var(--pink);
   -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
 }
 .help-modal-box .help-body { font-size: 0.94rem; line-height: 1.78; color: var(--text-2); }
@@ -877,8 +891,11 @@ button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focu
     --surface-2: #1d223c;
     --surface-3: #262c4a;
     --text:      #eef0ff;
-    --text-2:    #a8aecd;
-    --text-3:    #7f86a6;
+  --text-2:    #a8aecd;
+  --text-3:    #7f86a6;
+  --teal-ink:  #67e8f9;
+  --green-ink: #6ee7b7;
+  --rose-ink:  #f0abfc;
     --border:    #2c3352;
     --border-2:  #3c4470;
 
@@ -936,8 +953,8 @@ button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focu
   .price { color: #67e8f9; background: rgba(6,182,212,0.14); }
   .nights-badge { color: #ddd6fe; border-color: #6d28d9; background: linear-gradient(135deg, rgba(139,92,246,0.22), rgba(6,182,212,0.18)); }
   th { color: #ddd6fe; background: linear-gradient(160deg, #262c4a, #1d223c 60%, #172b3a); border-bottom-color: #4c1d95; }
-  tbody tr:nth-child(even) td { background: rgba(139,92,246,0.05); }
-  tbody tr:hover td { background: linear-gradient(90deg, rgba(217,70,239,0.14), rgba(6,182,212,0.12)); }
+  tbody tr:nth-child(even) td { background-color: rgba(139,92,246,0.05); }
+  tbody tr:hover td { background-image: linear-gradient(90deg, rgba(217,70,239,0.14), rgba(6,182,212,0.12)); }
   .error-msg { color: #fecdd3; background: linear-gradient(135deg, rgba(244,63,94,0.18), rgba(236,72,153,0.14)); border-color: rgba(244,63,94,0.4); }
   .mc-label { color: #f0abfc; }
   .mc-card .mc-leg .mc-price, .mc-card .mc-via-route { color: #6ee7b7; }
@@ -999,5 +1016,17 @@ button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focu
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- 22. Windows High Contrast / forced colors ---------- */
+@media (forced-colors: active) {
+  /* Gradient-clipped text has no fill to clip once the system palette takes
+     over, so it renders blank. Hand every one of them a solid colour. */
+  header h1, .price-total, .mc-card .mc-total strong,
+  .help-modal-box h2, .wheel-text {
+    -webkit-text-fill-color: currentColor;
+    color: CanvasText;
+    background-image: none;
   }
 }
