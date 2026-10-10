@@ -412,43 +412,16 @@ input[type="checkbox"], input[type="radio"] {
 
 .filter-disabled { opacity: 0.42; filter: saturate(0.3); pointer-events: none; }
 
-/* ---------- 9. Multi-destination panel ---------- */
-.mcp {
-  grid-column: 1 / -1;
-  position: relative;
-  border: 2px solid rgba(244, 63, 94, 0.4);
-  border-radius: 18px;
-  padding: 15px 17px;
-  display: flex; flex-direction: column; gap: 10px;
-  background:
-    radial-gradient(400px 120px at 8% 0%, rgba(244, 63, 94, 0.12), transparent 70%),
-    linear-gradient(150deg, #fff1f2, #fdf4ff);
-  box-shadow: 0 6px 20px -10px rgba(244, 63, 94, 0.45);
-  transition: border-color .2s, box-shadow .25s, transform .2s var(--ease);
-}
-.mcp:hover { transform: translateY(-2px); box-shadow: 0 14px 30px -12px rgba(244, 63, 94, 0.5); }
-.mcp:has(input:checked) { border-color: rgba(244, 63, 94, 0.75); }
-
-.mcp-head { display: flex; align-items: center; gap: 11px; }
-.mcp-head > label {
-  display: inline-flex; align-items: center; gap: 9px;
-  color: #be123c; font-weight: 800; font-size: 0.98rem;
-  cursor: pointer; letter-spacing: 0.2px;
-}
-.mcp-head input { accent-color: var(--rose); }
-.mcp-chip {
-  margin-left: auto;
-  padding: 3px 11px; border-radius: 999px;
-  background: linear-gradient(135deg, #f43f5e, #fb923c);
-  color: #fff; font-size: 0.68rem; font-weight: 800;
-  text-transform: uppercase; letter-spacing: 0.8px;
-  box-shadow: 0 4px 10px -3px rgba(244, 63, 94, 0.6);
-}
+/* ---------- 9. Multi-destination checkbox ---------- */
+#multiDestMode { accent-color: var(--rose); }
+#multiDestFilter:has(input:checked) { border-color: rgba(244, 63, 94, 0.55); }
+#multiDestFilter > label { color: #be123c; }
 
 .mcp-sub {
   display: flex; align-items: center; gap: 11px;
   padding-left: 30px; padding-top: 10px;
   border-top: 1px dashed rgba(244, 63, 94, 0.3);
+  width: 100%;
 }
 .mcp-sub label {
   display: inline-flex; align-items: center; gap: 9px;
@@ -931,13 +904,7 @@ button:focus-visible, select:focus-visible, input:focus-visible, [tabindex]:focu
   header .badge { color: #f0abfc; border-color: rgba(217,70,239,0.4); }
   .field-label, .filter-group > label, .destinations-header .count { color: var(--text-2); }
 
-  .mcp {
-    background:
-      radial-gradient(400px 120px at 8% 0%, rgba(244,63,94,0.18), transparent 70%),
-      linear-gradient(150deg, rgba(76,20,40,0.5), rgba(45,20,70,0.5));
-  }
-  .mcp-head > label { color: #fda4af; }
-  .mcp-chip { background: linear-gradient(135deg, #f43f5e, #fb923c); }
+  #multiDestFilter > label { color: #fda4af; }
   .mcp-hint { color: #fda4af; }
   .dest-note.is-info  { color: #67e8f9; background: rgba(6,182,212,0.14);  border-color: rgba(6,182,212,0.35); }
   .dest-note.is-alert { color: #fda4af; background: rgba(244,63,94,0.14);   border-color: rgba(244,63,94,0.35); }

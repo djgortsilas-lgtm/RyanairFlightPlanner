@@ -15,7 +15,7 @@ const I18N = {
   nights: { el: 'Διανυκτερεύσεις', en: 'Nights' },
   to: { el: 'έως', en: 'to' },
   weekend: { el: 'Να περιλαμβάνει Σαββατοκύριακο', en: 'Include weekend' },
-  multiDest: { el: 'Multi-Destination', en: 'Multi-Destination' },
+  multiDest: { el: 'Με ανταπόκριση', en: 'With connection' },
   wheelHint: { el: 'Όλοι οι προορισμοί αυτόματα', en: 'All destinations automatically' },
   destCountTotal: { el: '{n} προορισμοί', en: '{n} destinations' },
   loadingDests: { el: 'Φόρτωση προορισμών...', en: 'Loading destinations...' },
@@ -24,8 +24,8 @@ const I18N = {
   helpBtn: { el: 'Βοήθεια / Οδηγίες', en: 'Help / Guide' },
   helpTitle: { el: 'Βοήθεια / Οδηγίες', en: 'Help / Guide' },
   helpBody: {
-    el: '<p>Η εφαρμογή ψάχνει ανάμεσα στα δρομολόγια να βρει πτήσεις που ανταποκρίνονται στα φίλτρα που ορίζει ο χρήστης, με ΑΦΕΤΗΡΙΑ το αεροδρόμιο που επιθυμεί. Για παράδειγμα: Από ημερομηνία 1/10/2026 έως 15/11/2026 και για διανυκτερεύσεις 3 έως 7 η εφαρμογή αναζητά ταξίδια μέσα στο εύρος των ημερομηνιών για 3 ή 4 ή 5 ή 6 ή 7 διανυκτερεύσεις, στον ή στους προορισμούς που έχουν επιλεχθεί. Μπορεί να οριστεί επιπλέον φίλτρο ώστε τα ταξίδια να περιλαμβάνουν Σαββατοκύριακο (βλ. αντίστοιχο checkbox).</p><p><strong>Multidestination:</strong> Έχοντας τσεκαρισμένη αυτή την λειτουργία, μπορούμε να επιλέξουμε κάποιον προορισμό που δεν ταξιδεύει με απευθείας πτήσεις από την ΑΦΕΤΗΡΙΑ, οπότε και βρίσκει πτήσεις μέσω ανταπόκρισης. </p><p>Στα αποτελέσματα αναζήτησης εμφανίζεται αρχικά ένας πίνακας/ημερολόγιο τιμών πτήσεων (με πράσινο φόντο οι φθηνότερες πτήσεις και με κόκκινο οι ακριβότερες) και μετά αναλυτικά όλες οι διαθέσιμες πτήσεις. Υπάρχουν διαθέσιμα φίλτρα ταξινόμησης, διανυκτερεύσεων και ωρών αναμονής στο αεροδρόμιο (στην περίπτωση ανταποκρίσεων).</p><p class="note"><u>Σημείωση:</u> Δεν υπάρχει δυνατότητα πραγματοποίησης κράτησης μέσω της εφαρμογής!</p>',
-    en: '<p>The app searches Ryanair schedules to find flights matching the user-defined filters, with ORIGIN set to the desired airport. For example: From date 1/10/2026 to 15/11/2026 and for 3 to 7 nights, the app searches for trips within the date range with 3 or 4 or 5 or 6 or 7 nights, for the selected destination(s). An extra filter can be set so that trips include a weekend (see the corresponding checkbox).</p><p><strong>Multidestination:</strong> With this option checked, you can select a destination not served by Ryanair with direct flights from the ORIGIN, and the app finds flights via a connection.</p><p>In the search results, a flight price table/calendar is shown first (cheapest flights with green background and most expensive with red), followed by a detailed list of all available flights. Sorting, nights and airport waiting-time filters are available (in the case of connections).</p><p class="note"><u>Note:</u> Booking cannot be made through the app!</p>'
+    el: '<p>Η εφαρμογή ψάχνει ανάμεσα στα δρομολόγια να βρει πτήσεις που ανταποκρίνονται στα φίλτρα που ορίζει ο χρήστης, με ΑΦΕΤΗΡΙΑ το αεροδρόμιο που επιθυμεί. Για παράδειγμα: Από ημερομηνία 1/10/2026 έως 15/11/2026 και για διανυκτερεύσεις 3 έως 7 η εφαρμογή αναζητά ταξίδια μέσα στο εύρος των ημερομηνιών για 3 ή 4 ή 5 ή 6 ή 7 διανυκτερεύσεις, στον ή στους προορισμούς που έχουν επιλεχθεί. Μπορεί να οριστεί επιπλέον φίλτρο ώστε τα ταξίδια να περιλαμβάνουν Σαββατοκύριακο (βλ. αντίστοιχο checkbox).</p><p><strong>Με ανταπόκριση:</strong> Έχοντας τσεκαρισμένη αυτή την λειτουργία, μπορούμε να επιλέξουμε κάποιον προορισμό που δεν ταξιδεύει με απευθείας πτήσεις από την ΑΦΕΤΗΡΙΑ, οπότε και βρίσκει πτήσεις μέσω ανταπόκρισης. </p><p>Στα αποτελέσματα αναζήτησης εμφανίζεται αρχικά ένας πίνακας/ημερολόγιο τιμών πτήσεων (με πράσινο φόντο οι φθηνότερες πτήσεις και με κόκκινο οι ακριβότερες) και μετά αναλυτικά όλες οι διαθέσιμες πτήσεις. Υπάρχουν διαθέσιμα φίλτρα ταξινόμησης, διανυκτερεύσεων και ωρών αναμονής στο αεροδρόμιο (στην περίπτωση ανταποκρίσεων).</p><p class="note"><u>Σημείωση:</u> Δεν υπάρχει δυνατότητα πραγματοποίησης κράτησης μέσω της εφαρμογής!</p>',
+    en: '<p>The app searches Ryanair schedules to find flights matching the user-defined filters, with ORIGIN set to the desired airport. For example: From date 1/10/2026 to 15/11/2026 and for 3 to 7 nights, the app searches for trips within the date range with 3 or 4 or 5 or 6 or 7 nights, for the selected destination(s). An extra filter can be set so that trips include a weekend (see the corresponding checkbox).</p><p><strong>With connection:</strong> With this option checked, you can select a destination not served by Ryanair with direct flights from the ORIGIN, and the app finds flights via a connection.</p><p>In the search results, a flight price table/calendar is shown first (cheapest flights with green background and most expensive with red), followed by a detailed list of all available flights. Sorting, nights and airport waiting-time filters are available (in the case of connections).</p><p class="note"><u>Note:</u> Booking cannot be made through the app!</p>'
   },
   search: { el: 'Αναζήτηση', en: 'Search' },
   searching: { el: 'Αναζήτηση...', en: 'Searching...' },
@@ -52,7 +52,7 @@ const I18N = {
   error: { el: 'Σφάλμα', en: 'Error' },
   completed: { el: 'Ολοκληρώθηκε — {n} διαδρομές', en: 'Completed — {n} routes' },
   mcHeader: { el: 'Επιλέξτε τελικό προορισμό (οποιοδήποτε αεροδρόμιο της Ryanair) — με πράσινο: απευθείας πτήση από την αφετηρία', en: 'Select a final destination (any Ryanair airport) — green: direct flight from the origin' },
-  mcTitle: { el: 'Multi-Destination: {org} → {dest}', en: 'Multi-Destination: {org} → {dest}' },
+  mcTitle: { el: 'Με ανταπόκριση: {org} → {dest}', en: 'With connection: {org} → {dest}' },
   foundRoutes: { el: 'Βρέθηκαν {n} διαδρομές', en: '{n} routes found' },
   cheapestSort: { el: 'Φθηνότερο', en: 'Cheapest' },
   nightsSort: { el: 'Διανυκτερεύσεις', en: 'Nights' },
@@ -201,7 +201,7 @@ function applyI18n() {
     sel.options[0].text = t('cheapest');
     sel.options[1].text = t('depDate');
   }
-  document.title = currentLang === 'en' ? 'LowcostFlightPlanner - Multi-Destination' : 'LowcostFlightPlanner - Multi-Destination από Ελλάδα';
+  document.title = currentLang === 'en' ? 'LowcostFlightPlanner - With connection' : 'LowcostFlightPlanner - Με ανταπόκριση';
 }
 
 function setLang(lang) {
@@ -267,7 +267,7 @@ function loadDestinations() {
     ? Object.values(data.destinations).flat().filter((v, i, a) => a.findIndex(t => t.code === v.code) === i)
     : (data.destinations[currentOrigin] || []);
   
-  if (!isMc) allDests.sort((a, b) => a.city.localeCompare(b.city));
+  if (!isMc) allDests.sort((a, b) => (a.country || '').localeCompare(b.country || '') || a.city.localeCompare(b.city));
   
   document.getElementById('destCount').textContent = t('destCountTotal', { n: allDests.length });
   renderDestinations(allDests);
@@ -296,10 +296,17 @@ function renderDestinations(allDests) {
     }
     grid.innerHTML = html;
   } else {
-    grid.innerHTML = allDests.map(d => {
+    let html = '';
+    let currentCountry = '';
+    for (const d of allDests) {
       const label = cityName(d.code, d.city);
-      return `<label class="dest-item"><input type="checkbox" value="${d.code}" ${selectedDestinations.has(d.code) ? 'checked' : ''} onchange="toggleDest('${d.code}',this.checked)"><span class="dest-code">${d.code}</span><span class="dest-name">${label}</span></label>`;
-    }).join('');
+      if (d.country !== currentCountry) {
+        currentCountry = d.country;
+        html += `<div class="dest-group">${currentCountry}</div>`;
+      }
+      html += `<label class="dest-item"><input type="checkbox" value="${d.code}" ${selectedDestinations.has(d.code) ? 'checked' : ''} onchange="toggleDest('${d.code}',this.checked)"><span class="dest-code">${d.code}</span><span class="dest-name">${label}</span></label>`;
+    }
+    grid.innerHTML = html;
   }
 }
 
